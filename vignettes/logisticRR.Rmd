@@ -1,0 +1,212 @@
+---
+title: "Deriving relative risk from logistic regression"
+author: "Youjin Lee"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## Relative risk v.s. odds ratio
+
+
+### Binary or continuous exposure variable
+
+$$\frac{P(D = 1 \mid E = 1, \mathbf{X} )}{P(D = 1 \mid E = 0, \mathbf{X})}$$
+
+$$\frac{P(D = 1 \mid E = z+1, \mathbf{X} )}{P(D = 1 \mid E = z, \mathbf{X})}$$
+
+### nominal exposure variable 
+
+
+$$\frac{P(D = 1 \mid E = z_{1}, \mathbf{X} )}{P(D = 1 \mid E = z_{0}, \mathbf{X})}$$
+The above is more generalized version. By setting $z_{1} = 1$ and $z_{0} = 0$ we can go back to binary case, for example.
+
+
+## Estimated variance of relative risk
+
+### Delta method,
+
+$$g(\boldsymbol{\beta}) = \frac{1 + \exp(-\beta_{0} - \beta_{1} z_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{X}) }{ 1 + \exp (-\beta_{0} - \beta_{1} z_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X}) }$$
+
+Then by Delta method,
+$$var[g(\boldsymbol{\beta})] =  \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}^{T}  var(\boldsymbol{\beta}) \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}$$
+Note that $\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}$ is $p \times 1$ and $var(\boldsymbol{\beta})$ is $p \times p$, so $var[g(\boldsymbol{\beta})]$ is a scalar value. 
+
+A $p \times p$ matrix of $var{(\boldsymbol{\beta})}$ is obtained by \code{summary(fit)$cov.unscaled} when \code{fit} is a \code{glm} object. 
+
+
+Let $e_{0} = \exp(-\beta_{0} - \beta_{1} z_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})$ and $e_{1} = \exp (-\beta_{0} - \beta_{1} z_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})$. 
+
+$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{0}} =  \frac{- e_{1} + e_{0}}{(1 + e_{1})^2 } = \frac{e_{0}(1 - \exp(-\beta_{1}(z_{1} - z_{0}) ) ) }{(1 + e_{1})^2}$$
+$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{1}} =  \frac{-z_{1} e_{1}( 1 + e_{0}) + z_{0} e_{0}(1 + e_{1})  }{(1 + e_{1})^2 }$$
+For any $j = 2,3,\ldots, p$ where $X_{j}$ is a covariate of which effect is associated with $\beta_{j}$:
+$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{j}} = \frac{x_{j}(e_{0} - e_{1} ) }{ (1+e_{1})^2} = \frac{1 - \exp(-(z_{1} - z_{0})\beta_{1}) }{(1 + e_{1})^2}$$
+
+
+
+### Bootstrap
+
+
+```{r}
+
+```
+
+
+### Examplary Data
+
+```{r}
+library(logisticRR)
+library(stringr)
+n <- 500
+set.seed(1234)
+X <- rbinom(n, 1, 0.3)
+W <- rbinom(n, 1, 0.3); W[sample(1:n, n/3)] = 2
+Z <- rep(0, n)
+Z[sample(1:n, n/2)] <- "female"; Z <- ifelse(Z == 0, "male", Z)
+dummyZ <- ifelse(Z == "female", 1, 0)
+Y <- rbinom(n, 1, plogis(X - W + 2*dummyZ))
+dat <- as.data.frame(cbind(Y, X, W, Z))
+dat$X <- as.numeric(dat$X); dat$X <- ifelse(dat$X == 2, 1, 0)
+dat$Y <- as.numeric(dat$Y); dat$Y <- ifelse(dat$Y == 2, 1, 0)
+dat$W <- as.factor(dat$W)
+dat$Z <- as.factor(dat$Z)
+head(dat)
+```
+
+```{r}
+simresult <- logisticRR(Y ~ X + W + Z, data = dat, boot = TRUE, n.boot = 200)
+var(simresult$boot.rr)
+simresult$delta.var
+
+simresult$RR
+```
+
+```{r}
+
+```
+
+
+### Plot 
+
+```{r}
+levels(dat$W)
+levels(dat$Z)
+adjusted <- cbind(rep(levels(dat$W), 2), rep(levels(dat$Z), each = 3))
+adjusted <- as.data.frame(adjusted)
+names(adjusted) <- c("W", "Z")
+
+## compare with odds ratio 
+results <- list()
+for(i in 1:nrow(adjusted)){
+  results[[i]] <- logisticRR(Y ~ X + W + Z, data = dat, fixcov = adjusted[i,], boot = FALSE)
+}
+
+
+## adjusted relative risk
+# female
+print(c(results[[1]]$RR, results[[2]]$RR, results[[3]]$RR))
+# male
+print(c(results[[4]]$RR, results[[5]]$RR, results[[6]]$RR))
+
+
+## adjusted odds ratio
+## all the same : by the assumption of logistic regression
+print(exp(coefficients(results[[1]]$fit)[2]))
+
+# betas <- coefficients(fit)
+# exposed <- exp(-predict(fit, expose.cov, type = "link"))
+# unexposed <- exp(-predict(fit, unexpose.cov, type = "link"))
+# RR <- (1 + unexposed) / (1 + exposed)
+
+
+```
+
+
+Let us change the prevalence of exposure variable ($X$). 
+```{r}
+dat2 <- dat 
+dat2$Y <- ifelse(dat$Y == 1, rbinom(n, 1, 0.2), rbinom(n, 1, 0.01))
+## compare with odds ratio 
+results2 <- list()
+for(i in 1:nrow(adjusted)){
+  results2[[i]] <- logisticRR(Y ~ X + W + Z, data = dat2, fixcov = adjusted[i,], boot = FALSE)
+}
+
+
+## adjusted relative risk
+# female
+print(c(results2[[1]]$RR, results2[[2]]$RR, results2[[3]]$RR))
+# male
+print(c(results2[[4]]$RR, results2[[5]]$RR, results2[[6]]$RR))
+
+
+## adjusted odds ratio
+## all the same : by the assumption of logistic regression
+print(exp(coefficients(results2[[1]]$fit)[2]))
+
+# betas <- coefficients(fit)
+# exposed <- exp(-predict(fit, expose.cov, type = "link"))
+# unexposed <- exp(-predict(fit, unexpose.cov, type = "link"))
+# RR <- (1 + unexposed) / (1 + exposed)
+
+
+```
+
+
+`airquality` 
+
+(`airquality`)[https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/airquality.html] 
+
+
+```{r}
+data("airquality")
+ozonedat <- na.omit(airquality)
+# define binary ozone level
+ozonedat$ozone1 <- ifelse(ozonedat$Ozone < quantile(ozonedat$Ozone, prob = 0.1), 1, 0)
+ozonedat$ozone2 <- ifelse(ozonedat$Ozone < quantile(ozonedat$Ozone, prob = 0.2), 1, 0)
+ozonedat$ozone3 <- ifelse(ozonedat$Ozone < quantile(ozonedat$Ozone, prob = 0.3), 1, 0)
+summary(ozonedat$Temp)
+ozonedat$Temp2 <- ozonedat$Temp / 10
+
+ozone.fit1 <- logisticRR(ozone1 ~ Temp2 +  Solar.R + Wind, data = ozonedat, basecov = min(ozonedat$Temp2),
+                        fixcov = data.frame(Solar.R = mean(ozonedat$Solar.R), Wind = mean(ozonedat$Wind)), boot = FALSE)
+
+ozone.fit2 <- logisticRR(ozone2 ~ Temp2 +  Solar.R + Wind, data = ozonedat, basecov = min(ozonedat$Temp2),
+                        fixcov = data.frame(Solar.R = mean(ozonedat$Solar.R), Wind = mean(ozonedat$Wind)), boot = FALSE)
+
+ozone.fit3 <- logisticRR(ozone3 ~ Temp2 +  Solar.R + Wind, data = ozonedat, basecov = min(ozonedat$Temp2),
+                        fixcov = data.frame(Solar.R = mean(ozonedat$Solar.R), Wind = mean(ozonedat$Wind)), boot = FALSE)
+
+
+```
+
+
+```{r}
+ data("airquality")
+  ozonedat <- na.omit(airquality)
+  # define binary ozone level
+  ozonedat$ozone1 <- ifelse(ozonedat$Ozone < quantile(ozonedat$Ozone, prob = 0.1), 1, 0)
+  ozonedat$Temp.factor <- ifelse(ozonedat$Temp <= quantile(ozonedat$Temp, prob = 0.25), "low",
+                                 ifelse(ozonedat$Temp > quantile(ozonedat$Temp, prob = 0.8), "high", "medium"))
+  ozonedat$Temp.factor <- as.factor(ozonedat$Temp.factor)
+
+  ozone.fit.factor <- nominalRR(ozone1 ~ Temp.factor + Solar.R + Wind, data = ozonedat,
+                                basecov = "low", comparecov = "medium",
+                                fixcov = data.frame(Solar.R = mean(ozonedat$Solar.R), Wind = mean(ozonedat$Wind)), boot = FALSE)
+
+  ozone.fit.factor2 <- nominalRR(ozone1 ~ Temp.factor + Solar.R + Wind, data = ozonedat,
+                                 basecov = "medium", comparecov = "low",
+                                 fixcov = data.frame(Solar.R = mean(ozonedat$Solar.R), Wind = mean(ozonedat$Wind)), boot = FALSE)
+
+
+```

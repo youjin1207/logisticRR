@@ -7,13 +7,13 @@
     "folds" : "",
     "hash" : "0",
     "id" : "C030DFC9",
-    "lastKnownWriteTime" : 1534359701,
-    "last_content_update" : 1534359701,
-    "path" : "~/Dropbox/2018-2019/2018_1st_term/logisticRR/R/hello.R",
-    "project_path" : "R/hello.R",
+    "lastKnownWriteTime" : 1535573370,
+    "last_content_update" : 1535573370918,
+    "path" : "~/Dropbox/2018-2019/2018_1st_term/logisticRR/R/nominalRR.R",
+    "project_path" : "R/nominalRR.R",
     "properties" : {
-        "cursorPosition" : "10,1",
-        "scrollLine" : "0"
+        "cursorPosition" : "33,44",
+        "scrollLine" : "22"
     },
     "relative_order" : 1,
     "source_on_save" : false,

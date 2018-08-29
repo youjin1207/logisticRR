@@ -1,10 +1,9 @@
-#' Calculate relative risks (RR) under nominal exposure variable
+#' Calculate relative risks (RR)
 #'
 #' When response variable is binary and exposure variable is binary or continuous
 #'
 #' @param formula a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.
-#' @param basecov a baseline value of exposure variable. Defaults to the first level.
-#' @param comparecov a value of exposure variable for comparison. Defaults to the second level.
+#' @param basecov a baseline value of exposure variable. Defaults to \code{0}.
 #' @param fixcov a data frame of fixed value for each of adjusted confounders. If there is no confounder other than an exposure variable of interest, \code{fixcov} = \code{NULL}; if \code{fixcov} is missing for covariates, they are all set to \code{0} (for numerical covariates) or first levels (for factor covariates).
 #' @param data a data frame containing response variable and all the terms used in \code{formula}.
 #' @param boot a logical value whether bootstrap samples are generated or not. Defaults to \code{FALSE}.
@@ -27,62 +26,40 @@
 #'
 #'
 #'
-#'
-nominalRR = function(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, data, boot = FALSE,
-                     n.boot = 100){
+logisticRR = function(formula, basecov = 0, fixcov = NULL, data, boot = FALSE,
+                      n.boot = 100){
 
-  printnRR <- function(formula = formula, basecov = basecov, comparecov = comparecov, fixcov = fixcov, data = data){
+  printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data = data){
     fit <- glm(formula, family = binomial(), data = data)
     tmp <- strsplit(as.character(formula)[3], "[+]")
     varnames <- gsub(" ","", tmp[[1]])
-    varnames <- ifelse(is.na(str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))')), varnames, str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))'))
+    #varnames <- ifelse(is.na(str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))')), varnames, str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))'))
 
-    ## levels of factor
-    if (class(data[ ,names(data) == varnames[1]]) != "factor") return("Please use logisticRR")
-    q <- length(levels(data[ ,names(data) == varnames[1]]))
-
-    ## set the initial level as a default
-    baseind = compareind <- 1
-    if (is.null(basecov)) basecov <- levels(data[ ,names(data) == varnames[1]])[baseind]
-    if (is.null(comparecov)) comparecov <- levels(data[ ,names(data) == varnames[1]])[compareind]
-    if (!as.character(basecov) %in% as.character(levels(data[ ,names(data) == varnames[1]]))) return("Invalid baseline exposure.")
-    if (!as.character(comparecov) %in% as.character(levels(data[ ,names(data) == varnames[1]]))) return("Invalid exposure variable.")
-
-    ## check the order of basecov and comparecov
-    for (j in 1:(q-1)){
-      if (as.character(strsplit(names(coefficients(fit))[j+1], split="\\)")[[1]][2]) == as.character(basecov)){
-        baseind <- j+1 # j-th level
-      }
-      if (as.character(strsplit(names(coefficients(fit))[j+1], split="\\)")[[1]][2]) == as.character(comparecov)){
-        compareind <- j+1 # j-th level
-      }
-    }
+    if ( class(data[ ,names(data) == varnames[1]]) == "factor" ) return("Please use nominalRR")
 
     p <- length(varnames)-1 # the number of variables to be fixed
     if (p == 0) {
-      fixcov <- NULL
+      fixcov = NULL
     } else if (is.null(fixcov) & p > 0) {
       ## if values of other confounders are not specified, set them all zeros.
       fixcov <- t(as.matrix(rep(0, p)))
       subdat = as.data.frame( data[,which(names(data) %in% varnames[-1])] )
       tmp <-  which(apply(subdat, 2, class)!="numeric")
-      for (j in 1:length(tmp)) {
-        fixcov[j] <- levels(as.factor(subdat[,j]))[1]
+      for (q in 1:p) {
+        if(class(subdat[,q]) == "factor"){
+          fixcov[q] <- levels(as.factor(subdat[,q]))[1]
+        }else{
+          fixcov[q] <- min(subdat[,q])
+        }
       }
       fixcov <- as.data.frame(fixcov)
-      names(fixcov) <- names(data)[which(names(data) %in% varnames[-1])]
-    } else {
-      return ("The length of fixed confounders is incorrect")
+      names(fixcov) = names(data)[which(names(data) %in% varnames[-1])]
+    } else if (!is.null(fixcov) & length(fixcov) != p){
+      return("The length of fixed confounders is incorrect")
     }
 
-    # if exposure variable is factor
-    basecov <- levels(data[ ,names(data) == varnames[1]])[baseind]
-    comparecov <- levels(data[ ,names(data) == varnames[1]])[compareind]
-
-    expose.cov <- data.frame(as.factor(comparecov)); names(expose.cov) <- varnames[1]
-    unexpose.cov <- data.frame(as.factor(basecov)); names(unexpose.cov) <- varnames[1]
-
-
+    expose.cov <- data.frame(basecov + 1); names(expose.cov) <- varnames[1]
+    unexpose.cov <- data.frame(basecov); names(unexpose.cov) <- varnames[1]
     if (length(fixcov) > 0 & length(names(fixcov)) > 0 & length(fixcov) == length(varnames)-1) {
       expose.cov <- cbind(expose.cov, fixcov)
       unexpose.cov <- cbind(unexpose.cov, fixcov)
@@ -96,7 +73,10 @@ nominalRR = function(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, 
 
 
     for (i in 1:ncol(expose.cov)) {
-      if (class(data[ , names(data) == names(expose.cov[,i])]) == "numeric") {
+      #if(class(expose.cov[,i])== "numeric"){
+      #  expose.cov[,i] = as.factor(expose.cov[,i]);  unexpose.cov[,i] = as.factor(unexpose.cov[,i])
+      #}
+      if (class(data[ , names(data) == names(expose.cov)[i]]) != "factor") {
         expose.cov[,i] <- as.numeric(expose.cov[,i]);  unexpose.cov[,i] <- as.numeric(unexpose.cov[,i])
       }
     }
@@ -110,26 +90,21 @@ nominalRR = function(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, 
 
     n.par <- length(betas)
     B.vec <- rep(0, n.par) # intercept + main variable + variables to e fixed
-    B.vec[1] <- (-exposed + unexposed) / (1 + exposed )^2
-
-    ## define new B.vec for main exposure variable
-    for(j in 2:q){
-      B.vec[j] = -(compareind == j)*exposed*(1 + unexposed) + (baseind == j)*unexposed*(1 + exposed)
-      B.vec[j] = B.vec[j] / (1 + exposed)^2
-    }
-
-    for (j in (q+1):n.par) {
+    B.vec[1] <- (-exposed + unexposed) / ( 1 + exposed )^2
+    #B.vec[2] = -exposed*(1 + unexposed) / ( 1 + exposed )^2
+    B.vec[2] = (-(basecov+1)*exposed*(1+unexposed) + basecov*unexposed*(1 + exposed)) / (1 + exposed)^2
+    for (j in 3:n.par) {
       if (names(coefficients(fit))[j] %in% names(fixcov)) {
         tmp <- which(names(fixcov) %in% names(coefficients(fit))[j])
-        B.vec[j] <- as.numeric(fixcov[tmp])*(-exposed + unexposed) / (1 + exposed)^2
+        B.vec[j] <- as.numeric(fixcov[tmp])*(unexposed - exposed)/ (1 + exposed)^2
       } else if (str_extract(names(coefficients(fit))[j], '(?<=\\()[:alpha:]+(?=\\))') %in% names(fixcov)) {
         ## factor
         tmp <- which(names(fixcov) %in% str_extract(names(coefficients(fit))[j], '(?<=\\()[:alpha:]+(?=\\))'))
         # if fixcov[tmp] = 0; reference.
         if (as.character(strsplit(names(coefficients(fit))[j], split="\\)")[[1]][2]) == as.character(fixcov[,tmp])) {
-          B.vec[j] <- 1*(-exposed + unexposed) / (1 + exposed)^2
+          B.vec[j] <- 1*(unexposed - exposed)/ (1 + exposed)^2
         } else {
-          B.vec[j] <- 0*(-exposed + unexposed) / (1 + exposed)^2
+          B.vec[j] <- 0*(unexposed - exposed)/ (1 + exposed)^2
         }
       }
     }
@@ -141,10 +116,11 @@ nominalRR = function(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, 
         deltavar <- deltavar + cov.mat[i,j]*B.vec[i]*B.vec[j]
       }
     }
-    return (list(RR = RR, delta.var = deltavar, fix.cov = fixcov))
+    return(list(fit = fit, RR = RR, delta.var = deltavar, fix.cov = fixcov))
   }
 
-  results <- printnRR(formula = formula, basecov = basecov, comparecov = comparecov, fixcov = fixcov, data = data)
+  results <- printRR(formula = formula, basecov = basecov, fixcov = fixcov,
+                     data = data)
 
   if (class(results) == "character") return(results)
 
@@ -153,12 +129,13 @@ nominalRR = function(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, 
   boot.rr = boot.var <- c()
   for (r in 1:n.boot) {
     newdat <- data[sample(1:nrow(data), replace = TRUE),]
-    boot.results <- printnRR(formula = formula, basecov = basecov, comparecov = comparecov, fixcov = fixcov, data = newdat)
+    boot.results <- printRR(formula = formula, basecov = basecov, fixcov = fixcov,
+                            data = newdat)
     boot.rr[r] <- boot.results$RR
     boot.var[r] <- boot.results$delta.var
   }
 
-  return(list(RR = results$RR, delta.var = results$delta.var,
+  return(list(fit = results$fit, RR = results$RR, delta.var = results$delta.var,
               boot.rr = boot.rr, boot.var = boot.var, fix.cov = results$fix.cov))
 }
 
