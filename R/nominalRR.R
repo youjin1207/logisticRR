@@ -21,7 +21,6 @@
 #'
 #' @author Youjin Lee
 #'
-#' @importFrom stringr str_extract
 #'
 #' @examples
 #'
@@ -127,11 +126,11 @@ nominalRR = function(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, 
       if (names(coefficients(fit))[j] %in% names(fixcov)) {
         tmp <- which(names(fixcov) %in% names(coefficients(fit))[j])
         B.vec[j] <- as.numeric(fixcov[tmp])*(-exposed + unexposed) / (1 + exposed)^2
-      } else if (str_extract(names(coefficients(fit))[j], '(?<=\\()[:alpha:]+(?=\\))') %in% names(fixcov)) {
+      } else if (sum(startsWith(names(coefficients(fit))[j], names(fixcov))) > 0) {
         ## factor
-        tmp <- which(names(fixcov) %in% str_extract(names(coefficients(fit))[j], '(?<=\\()[:alpha:]+(?=\\))'))
+        tmp <- which(startsWith(names(coefficients(fit))[j], names(fixcov)))
         # if fixcov[tmp] = 0; reference.
-        if (as.character(strsplit(names(coefficients(fit))[j], split="\\)")[[1]][2]) == as.character(fixcov[,tmp])) {
+        if (gsub(names(fixcov)[tmp], "",names(coefficients(fit))[j]) == as.character(fixcov[,tmp])) {
           B.vec[j] <- 1*(-exposed + unexposed) / (1 + exposed)^2
         } else {
           B.vec[j] <- 0*(-exposed + unexposed) / (1 + exposed)^2
