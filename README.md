@@ -28,6 +28,7 @@ install_github("youjin1207/logisticRR")
 
 
 ```
+install_github("youjin1207/logisticRR", build_vignettes = TRUE)
 vignette("logisticRR", package = "logisticRR")
 ```
 

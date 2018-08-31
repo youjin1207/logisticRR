@@ -1,4 +1,110 @@
-#' Calculate relative risks (RR)
+#' Print adjusted relative risk under binary/ordinal exposure variable.
+#'
+#' @param formula a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.
+#' @param basecov a baseline value of exposure variable. Defaults to \code{0}.
+#' @param fixcov a data frame of fixed value for each of adjusted confounders. If there is no confounder other than an exposure variable of interest, \code{fixcov} = \code{NULL}; if \code{fixcov} is missing for covariates, they are all set to \code{0} (for numerical covariates) or first levels (for factor covariates).
+#' @param data a data frame containing response variable and all the terms used in \code{formula}.
+#'
+#' @return
+#' \item{\code{fit}}{an object of class \code{glm}.}
+#' \item{\code{RR}}{(adjusted) relative risk in response under exposure at baseline (\code{basecov}) and \code{basecov + 1}.}
+#' \item{\code{delta.var}}{estimated variance of relative risk (\code{RR}) using Delta method.}
+#' \item{\code{fix.cov}}{a data frame of fixed value for each of adjsuted confounders.}
+#'
+#' @importFrom stats binomial coefficients glm predict
+#' @export
+#'
+printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data = data){
+  fit <- glm(formula, family = binomial(), data = data)
+  tmp <- strsplit(as.character(formula)[3], "[+]")
+  varnames <- gsub(" ","", tmp[[1]])
+  #varnames <- ifelse(is.na(str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))')), varnames, str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))'))
+
+  if ( class(data[ ,names(data) == varnames[1]]) == "factor" ) return("Please use nominalRR")
+
+  p <- length(varnames)-1 # the number of variables to be fixed
+  if (p == 0) {
+    fixcov = NULL
+  } else if (is.null(fixcov) & p > 0) {
+    ## if values of other confounders are not specified, set them all zeros.
+    fixcov <- t(as.matrix(rep(0, p)))
+    subdat = as.data.frame( data[,which(names(data) %in% varnames[-1])] )
+    tmp <-  which(apply(subdat, 2, class)!="numeric")
+    for (q in 1:p) {
+      if(class(subdat[,q]) == "factor"){
+        fixcov[q] <- levels(as.factor(subdat[,q]))[1]
+      }else{
+        fixcov[q] <- min(subdat[,q])
+      }
+    }
+    fixcov <- as.data.frame(fixcov)
+    names(fixcov) = names(data)[which(names(data) %in% varnames[-1])]
+  } else if (!is.null(fixcov) & length(fixcov) != p){
+    return("The length of fixed confounders is incorrect")
+  }
+
+  expose.cov <- data.frame(basecov + 1); names(expose.cov) <- varnames[1]
+  unexpose.cov <- data.frame(basecov); names(unexpose.cov) <- varnames[1]
+  if (length(fixcov) > 0 & length(names(fixcov)) > 0 & length(fixcov) == length(varnames)-1) {
+    expose.cov <- cbind(expose.cov, fixcov)
+    unexpose.cov <- cbind(unexpose.cov, fixcov)
+  } else if (length(names(fixcov)) == 0 & length(fixcov) > 0) {
+    # if the name is missing, put varnames in the order of formula
+    expose.cov <- cbind(expose.cov, fixcov); names(expose.cov)[2:length(expose.cov)] = varnames[2:length(varnames)]
+    unexpose.cov <- cbind(unexpose.cov, fixcov); names(unexpose.cov)[2:length(unexpose.cov)] = varnames[2:length(varnames)]
+  } else if (p > 0){
+    return("Invalid data frame for confounders")
+  }
+
+
+  for (i in 1:ncol(expose.cov)) {
+    #if(class(expose.cov[,i])== "numeric"){
+    #  expose.cov[,i] = as.factor(expose.cov[,i]);  unexpose.cov[,i] = as.factor(unexpose.cov[,i])
+    #}
+    if (class(data[ , names(data) == names(expose.cov)[i]]) != "factor") {
+      expose.cov[,i] <- as.numeric(expose.cov[,i]);  unexpose.cov[,i] <- as.numeric(unexpose.cov[,i])
+    }
+  }
+
+  betas <- coefficients(fit)
+  exposed <- exp(-predict(fit, expose.cov, type = "link"))
+  unexposed <- exp(-predict(fit, unexpose.cov, type = "link"))
+
+  RR <- (1 + unexposed) / (1 + exposed)
+
+
+  n.par <- length(betas)
+  B.vec <- rep(0, n.par) # intercept + main variable + variables to e fixed
+  B.vec[1] <- (-exposed + unexposed) / ( 1 + exposed )^2
+  #B.vec[2] = -exposed*(1 + unexposed) / ( 1 + exposed )^2
+  B.vec[2] = (-(basecov+1)*exposed*(1+unexposed) + basecov*unexposed*(1 + exposed)) / (1 + exposed)^2
+  for (j in 3:n.par) {
+    if (names(coefficients(fit))[j] %in% names(fixcov)) {
+      tmp <- which(names(fixcov) %in% names(coefficients(fit))[j])
+      B.vec[j] <- as.numeric(fixcov[tmp])*(unexposed - exposed)/ (1 + exposed)^2
+    } else if (sum(startsWith(names(coefficients(fit))[j], names(fixcov))) > 0) {
+      ## factor
+      tmp <- which(startsWith(names(coefficients(fit))[j], names(fixcov)))
+      # if fixcov[tmp] = 0; reference.
+      if (gsub(names(fixcov)[tmp], "",names(coefficients(fit))[j]) == as.character(fixcov[,tmp]) ) {
+        B.vec[j] <- 1*(unexposed - exposed)/ (1 + exposed)^2
+      } else {
+        B.vec[j] <- 0*(unexposed - exposed)/ (1 + exposed)^2
+      }
+    }
+  }
+
+  cov.mat <- summary(fit)$cov.unscaled
+  deltavar <- 0
+  for (i in 1:n.par) {
+    for (j in 1:n.par) {
+      deltavar <- deltavar + cov.mat[i,j]*B.vec[i]*B.vec[j]
+    }
+  }
+  return(list(fit = fit, RR = RR, delta.var = deltavar, fix.cov = fixcov))
+}
+
+#' Calculate adjusted relative risks (RR)
 #'
 #' When response variable is binary and exposure variable is binary or continuous
 #'
@@ -10,113 +116,21 @@
 #' @param n.boot if \code{boot =  TRUE}, the number of bootstrap samples. Defaults to \code{100}.
 #'
 #' @return
+#' \item{\code{fit}}{an object of class \code{glm}.}
 #' \item{\code{RR}}{(conditional) relative risk in response under exposure at baseline (\code{basecov}) and \code{basecov + 1}.}
 #' \item{\code{delta.var}}{estimated variance of relative risk (\code{RR}) using Delta method.}
 #' \item{\code{boot.rr}}{if \code{boot = TRUE}, a vector of \code{RR}'s using bootstrap samples.}
 #' \item{\code{boot.var}}{estimated sampled variance using bootstraps if \code{boot = TRUE}.}
 #' \item{\code{fix.cov}}{a data frame of fixed value for each of adjsuted confounders.}
 #'
+#' @importFrom stats binomial coefficients glm predict
 #' @export
 #'
 #' @author Youjin Lee
 #'
-#'
-#' @examples
-#'
-#'
-#'
+
 logisticRR = function(formula, basecov = 0, fixcov = NULL, data, boot = FALSE,
                       n.boot = 100){
-
-  printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data = data){
-    fit <- glm(formula, family = binomial(), data = data)
-    tmp <- strsplit(as.character(formula)[3], "[+]")
-    varnames <- gsub(" ","", tmp[[1]])
-    #varnames <- ifelse(is.na(str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))')), varnames, str_extract(varnames, '(?<=\\()[:alpha:]+(?=\\))'))
-
-    if ( class(data[ ,names(data) == varnames[1]]) == "factor" ) return("Please use nominalRR")
-
-    p <- length(varnames)-1 # the number of variables to be fixed
-    if (p == 0) {
-      fixcov = NULL
-    } else if (is.null(fixcov) & p > 0) {
-      ## if values of other confounders are not specified, set them all zeros.
-      fixcov <- t(as.matrix(rep(0, p)))
-      subdat = as.data.frame( data[,which(names(data) %in% varnames[-1])] )
-      tmp <-  which(apply(subdat, 2, class)!="numeric")
-      for (q in 1:p) {
-        if(class(subdat[,q]) == "factor"){
-          fixcov[q] <- levels(as.factor(subdat[,q]))[1]
-        }else{
-          fixcov[q] <- min(subdat[,q])
-        }
-      }
-      fixcov <- as.data.frame(fixcov)
-      names(fixcov) = names(data)[which(names(data) %in% varnames[-1])]
-    } else if (!is.null(fixcov) & length(fixcov) != p){
-      return("The length of fixed confounders is incorrect")
-    }
-
-    expose.cov <- data.frame(basecov + 1); names(expose.cov) <- varnames[1]
-    unexpose.cov <- data.frame(basecov); names(unexpose.cov) <- varnames[1]
-    if (length(fixcov) > 0 & length(names(fixcov)) > 0 & length(fixcov) == length(varnames)-1) {
-      expose.cov <- cbind(expose.cov, fixcov)
-      unexpose.cov <- cbind(unexpose.cov, fixcov)
-    } else if (length(names(fixcov)) == 0 & length(fixcov) > 0) {
-      # if the name is missing, put varnames in the order of formula
-      expose.cov <- cbind(expose.cov, fixcov); names(expose.cov)[2:length(expose.cov)] = varnames[2:length(varnames)]
-      unexpose.cov <- cbind(unexpose.cov, fixcov); names(unexpose.cov)[2:length(unexpose.cov)] = varnames[2:length(varnames)]
-    } else if (p > 0){
-      return("Invalid data frame for confounders")
-    }
-
-
-    for (i in 1:ncol(expose.cov)) {
-      #if(class(expose.cov[,i])== "numeric"){
-      #  expose.cov[,i] = as.factor(expose.cov[,i]);  unexpose.cov[,i] = as.factor(unexpose.cov[,i])
-      #}
-      if (class(data[ , names(data) == names(expose.cov)[i]]) != "factor") {
-        expose.cov[,i] <- as.numeric(expose.cov[,i]);  unexpose.cov[,i] <- as.numeric(unexpose.cov[,i])
-      }
-    }
-
-    betas <- coefficients(fit)
-    exposed <- exp(-predict(fit, expose.cov, type = "link"))
-    unexposed <- exp(-predict(fit, unexpose.cov, type = "link"))
-
-    RR <- (1 + unexposed) / (1 + exposed)
-
-
-    n.par <- length(betas)
-    B.vec <- rep(0, n.par) # intercept + main variable + variables to e fixed
-    B.vec[1] <- (-exposed + unexposed) / ( 1 + exposed )^2
-    #B.vec[2] = -exposed*(1 + unexposed) / ( 1 + exposed )^2
-    B.vec[2] = (-(basecov+1)*exposed*(1+unexposed) + basecov*unexposed*(1 + exposed)) / (1 + exposed)^2
-    for (j in 3:n.par) {
-      if (names(coefficients(fit))[j] %in% names(fixcov)) {
-        tmp <- which(names(fixcov) %in% names(coefficients(fit))[j])
-        B.vec[j] <- as.numeric(fixcov[tmp])*(unexposed - exposed)/ (1 + exposed)^2
-      } else if (sum(startsWith(names(coefficients(fit))[j], names(fixcov))) > 0) {
-        ## factor
-        tmp <- which(startsWith(names(coefficients(fit))[j], names(fixcov)))
-        # if fixcov[tmp] = 0; reference.
-        if (gsub(names(fixcov)[tmp], "",names(coefficients(fit))[j]) == as.character(fixcov[,tmp]) ) {
-          B.vec[j] <- 1*(unexposed - exposed)/ (1 + exposed)^2
-        } else {
-          B.vec[j] <- 0*(unexposed - exposed)/ (1 + exposed)^2
-        }
-      }
-    }
-
-    cov.mat <- summary(fit)$cov.unscaled
-    deltavar <- 0
-    for (i in 1:n.par) {
-      for (j in 1:n.par) {
-        deltavar <- deltavar + cov.mat[i,j]*B.vec[i]*B.vec[j]
-      }
-    }
-    return(list(fit = fit, RR = RR, delta.var = deltavar, fix.cov = fixcov))
-  }
 
   results <- printRR(formula = formula, basecov = basecov, fixcov = fixcov,
                      data = data)

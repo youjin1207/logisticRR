@@ -4,10 +4,11 @@ Title: Adjusted Relative Risk from Logistic Regression
 Version: 0.1.0
 Author: Youjin Lee
 Maintainer:  Youjin Lee <ylee160@jhu.edu>
+Imports: stats
 Suggests: knitr,
     testthat
 Description: Adjusted odds ratio conditional on potential confounders can be directly obtained from logistic regression. However, those adjusted odds ratios have been widely incorrectly interpreted as a relative risk. As relative risk is often of interest in public health, we provide a simple code to return adjusted relative risks from logistic regression model under potential confounders. 
-License: What license is it under?
+License: GPL (>=3) | file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1

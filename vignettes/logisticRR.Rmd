@@ -3,7 +3,7 @@ title: "Deriving relative risk from logistic regression"
 author: "Youjin Lee"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{logisticRR}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
