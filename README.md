@@ -1,5 +1,6 @@
 # Overview
 
+[![Travis-CI Build Status](https://travis-ci.org/youjin1207/logisticRR.svg?branch=master)](https://travis-ci.org/youjin1207/logisticRR)
 
 ## Package information
 
