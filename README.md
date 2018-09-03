@@ -5,7 +5,7 @@
 
 - Version: 0.1.0
 - Maintainer : Youjin Lee (<ylee160@jhu.edu>)
-- Imports : 
+- Imports : stats
 
 ## Installation
 

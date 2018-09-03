@@ -46,24 +46,31 @@ printnRR <- function(formula = formula, basecov = basecov, comparecov = comparec
 
   p <- length(varnames)-1 # the number of variables to be fixed
   if (p == 0) {
-    fixcov <- NULL
-  } else if (is.null(fixcov) & p > 0) {
+    fixcov = NULL
+  } else if (p > 0) {
     ## if values of other confounders are not specified, set them all zeros.
-    fixcov <- t(as.matrix(rep(0, p)))
+    newfixcov <- t(as.matrix(rep(0, p)))
     subdat = as.data.frame( data[,which(names(data) %in% varnames[-1])] )
     tmp <-  which(apply(subdat, 2, class)!="numeric")
     for (q in 1:p) {
       if(class(subdat[,q]) == "factor"){
-        fixcov[q] <- levels(as.factor(subdat[,q]))[1]
+        newfixcov[q] <- levels(as.factor(subdat[,q]))[1]
       }else{
-        fixcov[q] <- min(subdat[,q])
+        newfixcov[q] <- min(subdat[,q])
       }
     }
-    fixcov <- as.data.frame(fixcov)
-    names(fixcov) = names(data)[which(names(data) %in% varnames[-1])]
-  } else if (!is.null(fixcov) & length(fixcov) != p) {
-    return ("The length of fixed confounders is incorrect")
+    newfixcov <- as.data.frame(newfixcov)
+    names(newfixcov) = names(data)[which(names(data) %in% varnames[-1])]
   }
+
+  if( sum(names(fixcov) %in% names(newfixcov)) > 0 ) {
+    tmpind <- which(names(newfixcov) %in% names(fixcov))
+    for(j in 1:length(tmpind)){
+      newfixcov[tmpind[j]] = eval(parse(text=paste0("fixcov$", names(newfixcov[tmpind])[j])))
+    }
+  }
+
+  fixcov = newfixcov
 
   # if exposure variable is factor
   basecov <- levels(as.factor(data[ ,names(data) == varnames[1]]))[baseind]
@@ -135,7 +142,7 @@ printnRR <- function(formula = formula, basecov = basecov, comparecov = comparec
 }
 
 
-#' Calculate relative risks (RR) under nominal exposure variable
+#' Calculate adjusted relative risks under nominal exposure variable
 #'
 #' When response variable is binary and exposure variable is binary or continuous
 #'

@@ -55,7 +55,7 @@ Then by Delta method,
 $$var[g(\boldsymbol{\beta})] =  \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}^{T}  var(\boldsymbol{\beta}) \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}$$
 Note that $\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}$ is $p \times 1$ and $var(\boldsymbol{\beta})$ is $p \times p$, so $var[g(\boldsymbol{\beta})]$ is a scalar value. 
 
-A $p \times p$ matrix of $var{(\boldsymbol{\beta})}$ is obtained by \code{summary(fit)$cov.unscaled} when `fit` is a `glm` object. 
+A $p \times p$ matrix of $var{(\boldsymbol{\beta})}$ is obtained by `summary(fit)$cov.unscaled` when `fit` is a `glm` object. 
 
 
 Let $e_{0} = \exp(-\beta_{0} - \beta_{1} z_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})$ and $e_{1} = \exp (-\beta_{0} - \beta_{1} z_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})$. 

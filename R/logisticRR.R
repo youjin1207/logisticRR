@@ -1,4 +1,4 @@
-#' Print adjusted relative risk under binary/ordinal exposure variable.
+#' Print adjusted relative risk under binary or ordinal exposure variable.
 #'
 #' @param formula a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.
 #' @param basecov a baseline value of exposure variable. Defaults to \code{0}.
@@ -25,23 +25,33 @@ printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data 
   p <- length(varnames)-1 # the number of variables to be fixed
   if (p == 0) {
     fixcov = NULL
-  } else if (is.null(fixcov) & p > 0) {
+  } else if (p > 0) {
     ## if values of other confounders are not specified, set them all zeros.
-    fixcov <- t(as.matrix(rep(0, p)))
+    newfixcov <- t(as.matrix(rep(0, p)))
     subdat = as.data.frame( data[,which(names(data) %in% varnames[-1])] )
     tmp <-  which(apply(subdat, 2, class)!="numeric")
     for (q in 1:p) {
       if(class(subdat[,q]) == "factor"){
-        fixcov[q] <- levels(as.factor(subdat[,q]))[1]
+        newfixcov[q] <- levels(as.factor(subdat[,q]))[1]
       }else{
-        fixcov[q] <- min(subdat[,q])
+        newfixcov[q] <- min(subdat[,q])
       }
     }
-    fixcov <- as.data.frame(fixcov)
-    names(fixcov) = names(data)[which(names(data) %in% varnames[-1])]
-  } else if (!is.null(fixcov) & length(fixcov) != p){
-    return("The length of fixed confounders is incorrect")
+    newfixcov <- as.data.frame(newfixcov)
+    names(newfixcov) = names(data)[which(names(data) %in% varnames[-1])]
   }
+
+  if( sum(names(fixcov) %in% names(newfixcov)) > 0 ) {
+    tmpind <- which(names(newfixcov) %in% names(fixcov))
+    for(j in 1:length(tmpind)){
+      newfixcov[tmpind[j]] = eval(parse(text=paste0("fixcov$", names(newfixcov[tmpind])[j])))
+    }
+  }
+
+  fixcov = newfixcov
+  #else if (!is.null(fixcov) & length(fixcov) != p){
+  #  return("The length of fixed confounders is incorrect")
+  #}
 
   expose.cov <- data.frame(basecov + 1); names(expose.cov) <- varnames[1]
   unexpose.cov <- data.frame(basecov); names(unexpose.cov) <- varnames[1]
@@ -104,7 +114,7 @@ printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data 
   return(list(fit = fit, RR = RR, delta.var = deltavar, fix.cov = fixcov))
 }
 
-#' Calculate adjusted relative risks (RR)
+#' Calculate adjusted relative risks
 #'
 #' When response variable is binary and exposure variable is binary or continuous
 #'
