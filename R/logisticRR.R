@@ -24,7 +24,7 @@ printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data 
 
   p <- length(varnames)-1 # the number of variables to be fixed
   if (p == 0) {
-    fixcov = NULL
+    newfixcov = NULL
   } else if (p > 0) {
     ## if values of other confounders are not specified, set them all zeros.
     newfixcov <- t(as.matrix(rep(0, p)))
@@ -88,18 +88,20 @@ printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data 
   B.vec[1] <- (-exposed + unexposed) / ( 1 + exposed )^2
   #B.vec[2] = -exposed*(1 + unexposed) / ( 1 + exposed )^2
   B.vec[2] = (-(basecov+1)*exposed*(1+unexposed) + basecov*unexposed*(1 + exposed)) / (1 + exposed)^2
-  for (j in 3:n.par) {
-    if (names(coefficients(fit))[j] %in% names(fixcov)) {
-      tmp <- which(names(fixcov) %in% names(coefficients(fit))[j])
-      B.vec[j] <- as.numeric(fixcov[tmp])*(unexposed - exposed)/ (1 + exposed)^2
-    } else if (sum(startsWith(names(coefficients(fit))[j], names(fixcov))) > 0) {
-      ## factor
-      tmp <- which(startsWith(names(coefficients(fit))[j], names(fixcov)))
-      # if fixcov[tmp] = 0; reference.
-      if (gsub(names(fixcov)[tmp], "",names(coefficients(fit))[j]) == as.character(fixcov[,tmp]) ) {
-        B.vec[j] <- 1*(unexposed - exposed)/ (1 + exposed)^2
-      } else {
-        B.vec[j] <- 0*(unexposed - exposed)/ (1 + exposed)^2
+  if(n.par > 2){
+    for (j in 3:n.par) {
+      if (names(coefficients(fit))[j] %in% names(fixcov)) {
+        tmp <- which(names(fixcov) %in% names(coefficients(fit))[j])
+        B.vec[j] <- as.numeric(fixcov[tmp])*(unexposed - exposed)/ (1 + exposed)^2
+      } else if (sum(startsWith(names(coefficients(fit))[j], names(fixcov))) > 0) {
+        ## factor
+        tmp <- which(startsWith(names(coefficients(fit))[j], names(fixcov)))
+        # if fixcov[tmp] = 0; reference.
+        if (gsub(names(fixcov)[tmp], "",names(coefficients(fit))[j]) == as.character(fixcov[,tmp]) ) {
+          B.vec[j] <- 1*(unexposed - exposed)/ (1 + exposed)^2
+        } else {
+          B.vec[j] <- 0*(unexposed - exposed)/ (1 + exposed)^2
+        }
       }
     }
   }
