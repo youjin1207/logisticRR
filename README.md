@@ -30,14 +30,12 @@ install_github("youjin1207/logisticRR")
 
 ```
 install_github("youjin1207/logisticRR", build_vignettes = TRUE)
+library(logisticRR)
 vignette("logisticRR", package = "logisticRR")
 ```
 
 ## Example
 
-```
-library(logisticRR)
-```
 
 ### generate hypothetical data
 

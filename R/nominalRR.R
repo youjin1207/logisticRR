@@ -2,7 +2,7 @@
 #'
 #' @param formula a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.
 #' @param basecov a baseline value of exposure variable. Defaults to the first level.
-#' @param comparecov a value of exposure variable for comparison. Defaults to the second level.
+#' @param comparecov a value of exposure variable for comparison. Defaults to the first level.
 #' @param fixcov a data frame of fixed value for each of adjusted confounders. If there is no confounder other than an exposure variable of interest, \code{fixcov} = \code{NULL}; if \code{fixcov} is missing for covariates, they are all set to \code{0} (for numerical covariates) or first levels (for factor covariates).
 #' @param data a data frame containing response variable and all the terms used in \code{formula}.
 #'
@@ -145,11 +145,13 @@ printnRR <- function(formula = formula, basecov = basecov, comparecov = comparec
 
 #' Calculate adjusted relative risks under nominal exposure variable
 #'
-#' When response variable is binary and exposure variable is binary or continuous
+#' When response variable is binary and exposure variable is categorical
+#' this function derives adjusted relative risks conditional on fixed other confounders' value
+#' from logistic regression.
 #'
 #' @param formula a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.
 #' @param basecov a baseline value of exposure variable. Defaults to the first level.
-#' @param comparecov a value of exposure variable for comparison. Defaults to the second level.
+#' @param comparecov a value of exposure variable for comparison. Defaults to the first level.
 #' @param fixcov a data frame of fixed value for each of adjusted confounders. If there is no confounder other than an exposure variable of interest, \code{fixcov} = \code{NULL}; if \code{fixcov} is missing for covariates, they are all set to \code{0} (for numerical covariates) or first levels (for factor covariates).
 #' @param data a data frame containing response variable and all the terms used in \code{formula}.
 #' @param boot a logical value whether bootstrap samples are generated or not. Defaults to \code{FALSE}.

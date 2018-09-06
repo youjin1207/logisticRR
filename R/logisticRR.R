@@ -118,7 +118,9 @@ printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data 
 
 #' Calculate adjusted relative risks
 #'
-#' When response variable is binary and exposure variable is binary or continuous
+#' When response variable is binary and exposure variable is binary or continuous,
+#' this function derives adjusted relative risks conditional on fixed other confounders' value
+#' from logistic regression.
 #'
 #' @param formula a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.
 #' @param basecov a baseline value of exposure variable. Defaults to \code{0}.
