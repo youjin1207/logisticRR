@@ -2,10 +2,9 @@
 % Please edit documentation in R/logisticRR.R
 \name{printRR}
 \alias{printRR}
-\title{Print adjusted relative risk under binary/ordinal exposure variable.}
+\title{Print adjusted relative risk under binary or ordinal exposure variable.}
 \usage{
-printRR(formula = formula, basecov = basecov, fixcov = fixcov,
-  data = data)
+printRR(formula, basecov = 0, fixcov = NULL, data)
 }
 \arguments{
 \item{formula}{a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.}
@@ -23,5 +22,5 @@ printRR(formula = formula, basecov = basecov, fixcov = fixcov,
 \item{\code{fix.cov}}{a data frame of fixed value for each of adjsuted confounders.}
 }
 \description{
-Print adjusted relative risk under binary/ordinal exposure variable.
+Print adjusted relative risk under binary or ordinal exposure variable.
 }

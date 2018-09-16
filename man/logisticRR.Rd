@@ -2,7 +2,7 @@
 % Please edit documentation in R/logisticRR.R
 \name{logisticRR}
 \alias{logisticRR}
-\title{Calculate adjusted relative risks (RR)}
+\title{Calculate adjusted relative risks}
 \usage{
 logisticRR(formula, basecov = 0, fixcov = NULL, data, boot = FALSE,
   n.boot = 100)
@@ -29,7 +29,9 @@ logisticRR(formula, basecov = 0, fixcov = NULL, data, boot = FALSE,
 \item{\code{fix.cov}}{a data frame of fixed value for each of adjsuted confounders.}
 }
 \description{
-When response variable is binary and exposure variable is binary or continuous
+When response variable is binary and exposure variable is binary or continuous,
+this function derives adjusted relative risks conditional on fixed other confounders' value
+from logistic regression.
 }
 \author{
 Youjin Lee

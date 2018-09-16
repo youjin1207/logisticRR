@@ -14,7 +14,17 @@
 #' @importFrom stats binomial coefficients glm predict
 #' @export
 #'
-printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data = data){
+#' @example
+#' n <- 500
+#' set.seed(1234)
+#' X <- rbinom(n, 1, 0.3)
+#' W <- rbinom(n, 1, 0.3)
+#' W[sample(1:n, n/3)] = 2
+#' Y <- rbinom(n, 1, plogis(X - W))
+#' dat <- as.data.frame(cbind(Y, X, W))
+#' result <- printRR(Y ~ X + W, basecov = 0, data = dat)
+#'
+printRR <- function(formula, basecov = 0, fixcov = NULL, data){
   fit <- glm(formula, family = binomial(), data = data)
   tmp <- strsplit(as.character(formula)[3], "[+]")
   varnames <- gsub(" ","", tmp[[1]])
@@ -141,6 +151,18 @@ printRR <- function(formula = formula, basecov = basecov, fixcov = fixcov, data 
 #' @export
 #'
 #' @author Youjin Lee
+#'
+#' @example
+#' n <- 500
+#' set.seed(1234)
+#' X <- rbinom(n, 1, 0.3)
+#' W <- rbinom(n, 1, 0.3);
+#' W[sample(1:n, n/3)] = 2
+#' Y <- rbinom(n, 1, plogis(X - W))
+#' dat <- as.data.frame(cbind(Y, X, W))
+#'result <- logisticRR(Y ~ X + W, basecov = 0, data = dat,
+#'                     boot = TRUE, n.boot = 200)
+#'
 #'
 
 logisticRR = function(formula, basecov = 0, fixcov = NULL, data, boot = FALSE,

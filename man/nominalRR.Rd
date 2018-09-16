@@ -2,17 +2,17 @@
 % Please edit documentation in R/nominalRR.R
 \name{nominalRR}
 \alias{nominalRR}
-\title{Calculate relative risks (RR) under nominal exposure variable}
+\title{Calculate adjusted relative risks under nominal exposure variable}
 \usage{
-nominalRR(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, data,
-  boot = FALSE, n.boot = 100)
+nominalRR(formula, basecov = NULL, comparecov = NULL, fixcov = NULL,
+  data, boot = FALSE, n.boot = 100)
 }
 \arguments{
 \item{formula}{a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.}
 
 \item{basecov}{a baseline value of exposure variable. Defaults to the first level.}
 
-\item{comparecov}{a value of exposure variable for comparison. Defaults to the second level.}
+\item{comparecov}{a value of exposure variable for comparison. Defaults to the first level.}
 
 \item{fixcov}{a data frame of fixed value for each of adjusted confounders. If there is no confounder other than an exposure variable of interest, \code{fixcov} = \code{NULL}; if \code{fixcov} is missing for covariates, they are all set to \code{0} (for numerical covariates) or first levels (for factor covariates).}
 
@@ -31,8 +31,21 @@ nominalRR(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, data,
 \item{\code{fix.cov}}{a data frame of fixed value for each of adjsuted confounders.}
 }
 \description{
-When response variable is binary and exposure variable is binary or continuous
+When response variable is binary and exposure variable is categorical
+this function derives adjusted relative risks conditional on fixed other confounders' value
+from logistic regression.
 }
 \author{
 Youjin Lee
+
+n <- 500
+set.seed(1234)
+W <- rbinom(n, 1, 0.3); W[sample(1:n, n/3)] = 2
+dat <- as.data.frame(W)
+dat$X <- sample( c("low", "medium", "high"), size = n, replace = TRUE)
+dat$Y <- ifelse(dat$X == "low", rbinom(n, 1, plogis(W + 0.5)),
+               ifelse(dat$X == "medium", rbinom(n, 1, plogis(W + 0.2)), rbinom(n, 1, plogis(W - 0.4)) ))
+dat$X <- as.factor(dat$X)
+result <- nominalRR(Y ~ X + W, basecov = "low", comparecov = "high", data = dat,
+boot = TRUE, n.boot = 200)
 }

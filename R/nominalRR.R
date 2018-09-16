@@ -16,7 +16,21 @@
 #' @export
 #'
 #' @author Youjin Lee
-printnRR <- function(formula = formula, basecov = basecov, comparecov = comparecov, fixcov = fixcov, data = data){
+#'
+#' @example
+#'
+#'n <- 500
+#' set.seed(1234)
+#' W <- rbinom(n, 1, 0.3); W[sample(1:n, n/3)] = 2
+#' dat <- as.data.frame(W)
+#' dat$X <- sample( c("low", "medium", "high"), size = n, replace = TRUE)
+#' dat$Y <- ifelse(dat$X == "low", rbinom(n, 1, plogis(W + 0.5)),
+#'                ifelse(dat$X == "medium", rbinom(n, 1, plogis(W + 0.2)), rbinom(n, 1, plogis(W - 0.4)) ))
+#' dat$X <- as.factor(dat$X)
+#' result <- printnRR(Y ~ X + W, basecov = "high", comparecov = "low", data = dat)
+#'
+#'
+printnRR <- function(formula, basecov, comparecov, fixcov = NULL, data){
   fit <- glm(formula, family = binomial(), data = data)
   tmp <- strsplit(as.character(formula)[3], "[+]")
   varnames <- gsub(" ","", tmp[[1]])
@@ -170,6 +184,16 @@ printnRR <- function(formula = formula, basecov = basecov, comparecov = comparec
 #'
 #' @author Youjin Lee
 #'
+#' n <- 500
+#' set.seed(1234)
+#' W <- rbinom(n, 1, 0.3); W[sample(1:n, n/3)] = 2
+#' dat <- as.data.frame(W)
+#' dat$X <- sample( c("low", "medium", "high"), size = n, replace = TRUE)
+#' dat$Y <- ifelse(dat$X == "low", rbinom(n, 1, plogis(W + 0.5)),
+#'                ifelse(dat$X == "medium", rbinom(n, 1, plogis(W + 0.2)), rbinom(n, 1, plogis(W - 0.4)) ))
+#' dat$X <- as.factor(dat$X)
+#' result <- nominalRR(Y ~ X + W, basecov = "low", comparecov = "high", data = dat,
+#' boot = TRUE, n.boot = 200)
 #'
 #'
 nominalRR = function(formula, basecov = NULL, comparecov = NULL, fixcov = NULL, data, boot = FALSE,

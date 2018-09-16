@@ -4,15 +4,14 @@
 \alias{printnRR}
 \title{Print adjusted relative risk under nominal exposure variable.}
 \usage{
-printnRR(formula = formula, basecov = basecov, comparecov = comparecov,
-  fixcov = fixcov, data = data)
+printnRR(formula, basecov, comparecov, fixcov = NULL, data)
 }
 \arguments{
 \item{formula}{a formula term that is passed into \code{glm()} having a form of \code{response ~ terms} where \code{response} is binary response vector and \code{terms} is a collection of terms connected by \code{'+'}. The first term of predictors will be used as a predictor of interest to calculate relative risks with respect to response variable.}
 
 \item{basecov}{a baseline value of exposure variable. Defaults to the first level.}
 
-\item{comparecov}{a value of exposure variable for comparison. Defaults to the second level.}
+\item{comparecov}{a value of exposure variable for comparison. Defaults to the first level.}
 
 \item{fixcov}{a data frame of fixed value for each of adjusted confounders. If there is no confounder other than an exposure variable of interest, \code{fixcov} = \code{NULL}; if \code{fixcov} is missing for covariates, they are all set to \code{0} (for numerical covariates) or first levels (for factor covariates).}
 
