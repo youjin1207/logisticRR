@@ -24,3 +24,14 @@ printRR(formula, basecov = 0, fixcov = NULL, data)
 \description{
 Print adjusted relative risk under binary or ordinal exposure variable.
 }
+\examples{
+n <- 500
+set.seed(1234)
+X <- rbinom(n, 1, 0.3)
+W <- rbinom(n, 1, 0.3)
+W[sample(1:n, n/3)] = 2
+Y <- rbinom(n, 1, plogis(X - W))
+dat <- as.data.frame(cbind(Y, X, W))
+result <- printRR(Y ~ X + W, basecov = 0, data = dat)
+
+}

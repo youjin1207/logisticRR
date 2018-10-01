@@ -14,7 +14,7 @@
 #' @importFrom stats binomial coefficients glm predict
 #' @export
 #'
-#' @example
+#' @examples
 #' n <- 500
 #' set.seed(1234)
 #' X <- rbinom(n, 1, 0.3)
@@ -152,7 +152,7 @@ printRR <- function(formula, basecov = 0, fixcov = NULL, data){
 #'
 #' @author Youjin Lee
 #'
-#' @example
+#' @examples
 #' n <- 500
 #' set.seed(1234)
 #' X <- rbinom(n, 1, 0.3)
@@ -160,7 +160,7 @@ printRR <- function(formula, basecov = 0, fixcov = NULL, data){
 #' W[sample(1:n, n/3)] = 2
 #' Y <- rbinom(n, 1, plogis(X - W))
 #' dat <- as.data.frame(cbind(Y, X, W))
-#'result <- logisticRR(Y ~ X + W, basecov = 0, data = dat,
+#' result <- logisticRR(Y ~ X + W, basecov = 0, data = dat,
 #'                     boot = TRUE, n.boot = 200)
 #'
 #'

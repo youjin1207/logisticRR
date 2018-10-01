@@ -2,6 +2,8 @@
 
 [![Travis-CI Build Status](https://travis-ci.org/youjin1207/logisticRR.svg?branch=master)](https://travis-ci.org/youjin1207/logisticRR)
 
+[![DOI](https://zenodo.org/badge/144892836.svg)](https://zenodo.org/badge/latestdoi/144892836)
+
 ## Package information
 
 - Version: 0.1.0

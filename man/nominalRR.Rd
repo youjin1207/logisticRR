@@ -35,17 +35,21 @@ When response variable is binary and exposure variable is categorical
 this function derives adjusted relative risks conditional on fixed other confounders' value
 from logistic regression.
 }
-\author{
-Youjin Lee
-
+\examples{
 n <- 500
 set.seed(1234)
 W <- rbinom(n, 1, 0.3); W[sample(1:n, n/3)] = 2
 dat <- as.data.frame(W)
 dat$X <- sample( c("low", "medium", "high"), size = n, replace = TRUE)
 dat$Y <- ifelse(dat$X == "low", rbinom(n, 1, plogis(W + 0.5)),
-               ifelse(dat$X == "medium", rbinom(n, 1, plogis(W + 0.2)), rbinom(n, 1, plogis(W - 0.4)) ))
+               ifelse(dat$X == "medium", rbinom(n, 1, plogis(W + 0.2)),
+               rbinom(n, 1, plogis(W - 0.4)) ))
 dat$X <- as.factor(dat$X)
 result <- nominalRR(Y ~ X + W, basecov = "low", comparecov = "high", data = dat,
 boot = TRUE, n.boot = 200)
+
+
+}
+\author{
+Youjin Lee
 }
