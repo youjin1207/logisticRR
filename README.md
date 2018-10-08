@@ -1,8 +1,10 @@
+[![Travis-CI Build Status](https://travis-ci.org/youjin1207/logisticRR.svg?branch=master)](https://travis-ci.org/youjin1207/logisticRR)
+[![DOI](https://zenodo.org/badge/144892836.svg)](https://zenodo.org/badge/latestdoi/144892836)
+![![Downloads badge](http://cranlogs.r-pkg.org/badges/logisticRR)](http://cranlogs.r-pkg.org/badges/logisticRR?color=red)
+ [![](http://cranlogs.r-pkg.org/badges/grand-total/logisticRR?color=yellow)](https://CRAN.R-project.org/package=logisticRR)
+
 # Overview
 
-[![Travis-CI Build Status](https://travis-ci.org/youjin1207/logisticRR.svg?branch=master)](https://travis-ci.org/youjin1207/logisticRR)
-
-[![DOI](https://zenodo.org/badge/144892836.svg)](https://zenodo.org/badge/latestdoi/144892836)
 
 ## Package information
 
@@ -16,8 +18,10 @@ You can download the package by:
 
 ```
 install.packages("logisticRR")
-
-# or you can directly download the development version from author's Github 
+library(logisticRR)
+```
+or you can directly download the development version from author's Github
+```
 install.packages("devtools")
 library(devtools)
 install_github("youjin1207/logisticRR")
@@ -28,8 +32,6 @@ install_github("youjin1207/logisticRR")
 
 [Here](https://github.com/youjin1207/logisticRR/blob/master/vignettes/logisticRR.Rmd) is a R vignettes for guidance. Or you can access to vignettes via:
 
-
-
 ```
 install_github("youjin1207/logisticRR", build_vignettes = TRUE)
 library(logisticRR)
@@ -37,7 +39,6 @@ vignette("logisticRR", package = "logisticRR")
 ```
 
 ## Example
-
 
 ### generate hypothetical data
 
