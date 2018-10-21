@@ -18,28 +18,53 @@ knitr::opts_chunk$set(
 
 ## Relative risk v.s. odds ratio
 
-Relative risk and odds ratio are often confused or interchanged. Especially while coefficients in logistic regression are directly interpreted as (adjusted) odds ratio, they are unwittingly translated as (adjusted) relative risks in many public health studies. In that relative risks are useful in many thousands of applications, instead of odds ratio, we propose a software tool to easily convert from odds ratio to relative risks under logistic regression. Unlike adjusted odds ratio conditional on other confounders, adjusted relative risks may vary depending on other confounders in the logistic model so we also analytically examine the effect of those confounders on the adjusted relative risk.
+Relative risk and odds ratio are often confused or misinterpreted. Especially while coefficients in logistic regression are directly interpreted as (adjusted) odds ratio, they are unwittingly translated as (adjusted) relative risks in many public health studies. In that relative risks are useful in many thousands of applications, along with odds ratio, we propose a software tool to easily convert from odds ratio to relative risks under logistic regression. Unlike adjusted odds ratio conditional on other confounders, adjusted relative risks may vary depending on other confounders in the logistic model so we also analytically examine the effect of those confounders on the adjusted relative risk.
 
 ### Binary or continuous exposure variable
 
-Let us first define adjusted relative risks of binary exposure $E$ on binary outcome $D$ conditional on $\mathbf{X}$. 
+Let us first define adjusted relative risks of binary exposure $X$ on binary outcome $Y$ conditional on $\mathbf{Z}$. 
 
-$$\frac{P(D = 1 \mid E = 1, \mathbf{X} )}{P(D = 1 \mid E = 0, \mathbf{X})}$$
+$$\frac{p(Y = 1 \mid X = 1, \mathbf{Z} )}{p(Y = 1 \mid X = 0, \mathbf{Z})}$$
 
-Generally speaking, when exposure variable of $E$ is continuous or ordinal, we can define adjusted relative risks as ratio between probability of observing $D = 1$ when $E = z+1$ over $E = z$ conditional on $\mathbf{X}$. Unlike adjusted odds ratio, these ratio depend on baseline value of exposure $z$ under logistic regression. 
+Generally speaking, when exposure variable of $X$ is continuous or ordinal, we can define adjusted relative risks as ratio between probability of observing $Y = 1$ when $X = x+1$ over $X = x$ conditional on $\mathbf{Z}$. Unlike adjusted odds ratio, these ratio depend on baseline value of exposure $x$ under logistic regression. 
 
-$$\frac{P(D = 1 \mid E = z+1, \mathbf{X} )}{P(D = 1 \mid E = z, \mathbf{X})}$$
+$$\frac{p(Y = 1 \mid X = x+1, \mathbf{Z} )}{p(Y = 1 \mid X = x, \mathbf{Z})}$$
 
 ### Nominal exposure variable 
 
-On the other hand, when exposure variable is nominal, it is impossible to compare the probabilities in one unit change. Therefore, when a type of exposure variable is `factor`, we allow users to specify two values of exposure variable including baseline ($z_{0}$) and comparative level ($z_{1}$) and derive the relative risks given those two exposure levels.
+On the other hand, when exposure variable is nominal, it is impossible to compare the probabilities in one unit change. Therefore, when a type of exposure variable is `factor`, we allow users to specify two values of exposure variable including baseline ($x_{0}$) and comparative level ($x_{1}$) and derive the relative risks given those two exposure levels.
+
+$$\frac{p(Y = 1 \mid X = x_{1}, \mathbf{Z} )}{p(Y = 1 \mid X = x_{0}, \mathbf{Z})}$$
+The above is more generalized version. By setting $x_{1} = 1$ and $x_{0} = 0$ we can go back to binary case.
+
+## Multinomial logistic regression
+
+Consider nominal outcome of interest that could take more than two values. Denote a value of outcome of $Y$ as $0, 1, 2, \ldots, K$ and treat $Y=0$ as reference. 
+
+$$\ln\left( \frac{p(Y_{i} = j | X_{i} = x, \mathbf{Z})}{p(Y_{i} = 0 | X_{i} = x, \mathbf{Z})} \right) = \alpha_{j} + \beta_{j} x + \mathbf{\gamma}^{T} \mathbf{z}_{i}$$
+
+Multinomial logistic regression is widely used for studies from diverse disciplines but unfortunately, we have commonly found the literatures that used relative risk from multinomial logistic regression without full discussion of its derivation or its varying value of conditioning covariates. 
 
 
-$$\frac{P(D = 1 \mid E = z_{1}, \mathbf{X} )}{P(D = 1 \mid E = z_{0}, \mathbf{X})}$$
-The above is more generalized version. By setting $z_{1} = 1$ and $z_{0} = 0$ we can go back to binary case.
+In this case, relative risks of reference group ($Y_{j} = 0$) for subject $i$ is :
+
+$$\frac{p( Y_{i} = 0 | X_{i} = x_{1}, \mathbf{Z} = \mathbf{z}_{i}  ) }{p(Y_{i} = 0 |  X_{i} = x_{0}, \mathbf{Z} = \mathbf{z}_{i} )}  =  \frac{1}{ 1 + \sum_{k=1}^{K} \exp(a_{k} + \beta_{k} x_{1} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) } \left( \frac{1}{ 1 + \sum_{k=1}^{K} \exp(a_{k} + \beta_{k} x_{0} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) }  \right)^{-1} \\  =  \left( 1 + \sum\limits_{k=1}^{K} \exp( \alpha_{k} + \beta_{k} x_{0} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) \right) \big/  \left(1 + \sum\limits_{k=1}^{K} \exp(\alpha_{k} + \beta_{k}x_{1} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} )  \right)$$
+
+In this case, relative risks of $Y_{j} = j$ ($j=1,2,\ldots, K$)
+
+$$\frac{p( Y_{i} = j | X_{i} = x_{1}, \mathbf{Z} = \mathbf{z}_{i}  ) }{p(Y_{i} = j |  X_{i} = x_{0}, \mathbf{Z} = \mathbf{z}_{i} )} =  \frac{\exp(a_{j} + \beta_{j} x_{1} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) }{ 1 + \sum_{k=1}^{K} \exp(a_{k} + \beta_{k} x_{1} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) } \left( \frac{\exp(a_{j} + \beta_{j} x_{0} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) }{ 1 + \sum_{k=1}^{K} \exp(a_{k} + \beta_{k} x_{0} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) }  \right)^{-1} \\  =  \frac{\exp( \beta_{j} (x_{1} - x_{0} )) \left( 1 + \sum\limits_{k=1}^{K} \exp( \alpha_{k} + \beta_{k} x_{0} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} ) \right) }{  1 + \sum\limits_{k=1}^{K} \exp(\alpha_{k} + \beta_{k}x_{1} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z}_{i} )  }$$
+
+Observe that relative risks for each of $K+1$ possible outcomes are all dependent on the regression coefficients of other groups and conditioning coefficient values ($\mathbf{z}_{i}$).
+
+Other than relative risks, relative risk ratio (RRR) between response of j and response of 0 is often of interest.
+
+\[
+\frac{p( Y_{i} = j | X_{i} = x_{1}, \mathbf{Z} = \mathbf{z}_{i}  ) }{p(Y_{i} = j |  X_{i} = x_{0}, \mathbf{Z} = \mathbf{z}_{i} )}  \big/ \frac{p( Y_{i} = 0 | X_{i} = x_{1}, \mathbf{Z} = \mathbf{z}_{i}  ) }{p(Y_{i} = 0 |  X_{i} = x_{0}, \mathbf{Z} = \mathbf{z}_{i} )} = \exp\left(  \beta_{j}(x_{1} - x_{0}) \right)
+\]
 
 
-## Estimated variance of relative risk
+
+## Estimated variance of relative risk under binary response
 
 In case of (adjusted) odds ratio derived from logistic regression, we can directly obtain variance-covariance matrix for coefficients using `glm` function in `R`. However, deriving variance of adjusted relative risks, as a function of those coefficients, is more challenging.  
 
@@ -47,9 +72,9 @@ We first provide a estimated variance of relative risk using Delta method upon e
 
 ### Delta method
 
-Let $\boldsymbol{\beta}$ be a vector of coefficients used in logistic regression and among them $\beta_{1}$ is a coefficient associated with an exposure variable of interest taking a value of $z_{0}$ as baseline level and $z_{1}$ as comparative level. Then we can represent the adjusted relative risk as a function of $\boldsymbol{\beta}$ conditional on $\mathbf{X}$: 
+Let $\boldsymbol{\beta}$ be a vector of coefficients used in logistic regression and among them $\beta_{1}$ is a coefficient associated with an exposure variable of interest taking a value of $x_{0}$ as baseline level and $x_{1}$ as comparative level. Then we can represent the adjusted relative risk as a function of $\boldsymbol{\beta}$ conditional on $\mathbf{Z} = \mathbf{z}$: 
 
-$$g(\boldsymbol{\beta}) = \frac{1 + \exp(-\beta_{0} - \beta_{1} z_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{X}) }{ 1 + \exp (-\beta_{0} - \beta_{1} z_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X}) }$$
+$$g(\boldsymbol{\beta}) = \frac{1 + \exp(-\beta_{0} - \beta_{1} x_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{z}) }{ 1 + \exp (-\beta_{0} - \beta_{1} x_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{z}) }$$
 
 Then by Delta method,
 $$var[g(\boldsymbol{\beta})] =  \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}^{T}  var(\boldsymbol{\beta}) \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}$$
@@ -58,18 +83,55 @@ Note that $\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}$ i
 A $p \times p$ matrix of $var{(\boldsymbol{\beta})}$ is obtained by `summary(fit)$cov.unscaled` when `fit` is a `glm` object. 
 
 
-Let $e_{0} = \exp(-\beta_{0} - \beta_{1} z_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})$ and $e_{1} = \exp (-\beta_{0} - \beta_{1} z_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})$. 
+Let $e_{0} = \exp(-\beta_{0} - \beta_{1} x_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{z})$ and $e_{1} = \exp (-\beta_{0} - \beta_{1} x_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{z})$. 
 
-$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{0}} =  \frac{- e_{1} + e_{0}}{(1 + e_{1})^2 } = \frac{e_{0}(1 - \exp(-\beta_{1}(z_{1} - z_{0}) ) ) }{(1 + e_{1})^2}$$
-$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{1}} =  \frac{-z_{1} e_{1}( 1 + e_{0}) + z_{0} e_{0}(1 + e_{1})  }{(1 + e_{1})^2 }$$
-For any $j = 2,3,\ldots, p$ where $X_{j}$ is a covariate of which effect is associated with $\beta_{j}$:
-$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{j}} = \frac{x_{j}(e_{0} - e_{1} ) }{ (1+e_{1})^2} = \frac{1 - \exp(-(z_{1} - z_{0})\beta_{1}) }{(1 + e_{1})^2}$$
+$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{0}} =  \frac{- e_{1} + e_{0}}{(1 + e_{1})^2 } = \frac{e_{0}(1 - \exp(-\beta_{1}(x_{1} - x_{0}) ) ) }{(1 + e_{1})^2}$$
+$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{1}} =  \frac{-x_{1} e_{1}( 1 + e_{0}) + x_{0} e_{0}(1 + e_{1})  }{(1 + e_{1})^2 }$$
+For any $j = 2,3,\ldots, p$ where $z_{j}$ is a covariate of which effect is associated with $\beta_{j}$:
+$$\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{j}} = \frac{z_{j}(e_{0} - e_{1} ) }{ (1+e_{1})^2} = \frac{1 - \exp(-(x_{1} - x_{0})\beta_{1}) }{(1 + e_{1})^2}$$
 
 By combining information of estimated $var{(\boldsymbol{\beta})}$ and $\frac{\partial g(\boldsymbol{\hat{\beta}})}{\partial \boldsymbol{\hat{\beta}}}$, we can derive the estimated variance of $g(\boldsymbol{\beta})$. 
 
-### Bootstrap
 
-In both of `logisticRR` and `nominalRR`, we add a logical input of `boot`: by setting `boot = TRUE` those functions print out a vector of `n.boot` number of (adjusted) relative risks. 
+
+## Estimated variance of relative risk under nominal response
+
+Similar to `glm()`, `multinom()` also produces Hessian matrix (`fit$Hessian` for `multinom` object of `fit`) of the coefficients of which inverse is covariance matrix. Therefore, similar to binary logistic regression, we can use Delta method to estimate the variance of relative risk. 
+
+Let us consider the response variable of $Y$ taking $(K+1)$ categorical values, $Y=0,1,2, \ldots, K$, and having one binary exposure variable $X$ and $p$ conditional covariates $\mathbf{Z}$. Then we can represent the adjusted relative risk of $k \in \{1,2, \ldots, K\}$ response as a function of $\boldsymbol{\Theta} = (\boldsymbol{\alpha}, \boldsymbol{\beta}, \boldsymbol{\Gamma})$ where $\boldsymbol{\alpha} = (\alpha_{1}, \alpha_{2}, \cdots, \alpha_{K})$; $\boldsymbol{\beta} = (\beta_{1}, \beta_{2}, \cdots, \beta_{K})$; and $\Gamma$ is $(K \times p)$ matrix of which $k^{th}$ row has $\boldsymbol{\gamma}_{k} = (\beta_{1}, \beta_{2}, \cdots, \beta_{K})$. 
+
+For $j \in \{1,2,\ldots, K\}$, let $g_{j}(\boldsymbol{\Theta})$ be a relative risk of $Y = j$ conditional on $\mathbf{Z} = \mathbf{z}$. 
+
+$$g_{j}(\boldsymbol{\Theta}) = \frac{p( Y = j | X = x_{1}, \mathbf{Z} = \mathbf{z}) }{p(Y = j|  X = x_{0}, \mathbf{Z} = \mathbf{z})}$$
+
+For simplicity, $e_{1k}(\mathbf{z}) = \exp(\alpha_{k} + \beta_{k}x_{1} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z})$ and $e_{0k} = \exp(\alpha_{k} + \beta_{k}x_{1} + \boldsymbol{\gamma}^{T}_{k} \mathbf{z})$.  
+
+$$\frac{\partial g_{j}(\boldsymbol{\Theta})}{\partial \alpha_{i}} =  (1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{z}))^{-2} \exp(\beta_{j}(x_{1} - x_{0}) )  \left\{ e_{1i}(\mathbf{z}) (1 + \sum\limits_{k=1}^{K} e_{0k}(\mathbf{z}) ) - e_{0i}(\mathbf{z}) ( 1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{Z}) )  \right\} $$
+If $i \neq j$:
+$$\frac{\partial g_{j}(\boldsymbol{\Theta})}{\partial \beta_{i}} =  (1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{z}))^{-2} \exp(\beta_{j}(x_{1} - x_{0}) )  \left\{ x_{1} e_{1i}(\mathbf{z}) (1 + \sum\limits_{k=1}^{K} e_{0k}(\mathbf{z}) ) - x_{0} e_{0i}(\mathbf{z}) ( 1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{Z}) )  \right\} $$
+
+If $i=j$:
+$$\frac{\partial g(\boldsymbol{\Theta})}{\partial \beta_{j}} =(1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{z}))^{-2} \exp(\beta_{j}(x_{1} - x_{0}) )  \left[ x_{1} e_{1i}(\mathbf{z}) (1 + \sum\limits_{k=1}^{K} e_{0k}(\mathbf{z}) ) - \left\{ (x_{1} - x_{0}) ( 1 + \sum\limits_{k=1}^{K} e_{0k}(\mathbf{Z})) + x_{0} e_{0i}(\mathbf{z}) \right\}( 1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{Z}) )  \right]$$
+
+For $l = 1,2,\ldots,p$:
+$$\frac{\partial g_{j}(\boldsymbol{\Theta})}{\partial \gamma_{jl}} =  (1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{z}))^{-2} \exp(\beta_{j}(x_{1} - x_{0}) ) z_{l} \left\{  e_{1i}(\mathbf{z}) (1 + \sum\limits_{k=1}^{K} e_{0k}(\mathbf{z}) ) - e_{0i}(\mathbf{z}) ( 1 + \sum\limits_{k=1}^{K} e_{1k}(\mathbf{Z}) )  \right\} $$
+On the other hand, relative risks of $Y = 0$, $g_{0}(\boldsymbol{\theta})$ can be also derived as similar way without $\exp(\beta_{j}(x_{1} - x_{0}) )$ in the nominator.
+
+Then a total of $q = (K + K + K\times p)$ vector of $\frac{\partial g_{j}(\boldsymbol{\Theta}) }{\partial \boldsymbol{\Theta}}$ for $j=0,1,2,\ldots, K$ can be constructed and let $\mathbf{G}$ be a $(K \times q)$ matrix of each row is $\frac{\partial g_{j}(\boldsymbol{\Theta}) }{\partial \boldsymbol{\Theta}}$.
+
+Then by Delta method,
+
+$$\begin{bmatrix} var\left[ g_{0}(\boldsymbol{\Theta}) \right] \\ var\left[ g_{1}(\boldsymbol{\Theta}) \right] \\ \vdots \\ var\left[ g_{K}(\boldsymbol{\Theta}) \right]  \end{bmatrix} = \mathbf{G}~var[\boldsymbol{\Theta}]~ \mathbf{G}^{-1}$$,
+where $var[\boldsymbol{\Theta}]$ is from Hessian matrix of `fit$Hessian`.
+
+
+In both of logistic regression and multinomial logistic regression, having nominal exposure variable makes derivation more complicated but we can extend the binary exposure variable case.  
+
+
+## Bootstrap
+
+All of `logisticRR`, `nominalRR`, `multiRR`, and `multinRR`,  we add a logical input of `boot`: by setting `boot = TRUE` those functions print out a vector of `n.boot` number of (adjusted) relative risks. 
+
 
 ## Examplary Data
 
@@ -213,6 +275,40 @@ for(p in 1:6){
 abline(h = exp(coefficients(results2[[1]]$fit)[2]), col = "red", lwd = 2)
 ```
 
+
+### multinomial logistic regression
+
+When reponse variable takes more than two values, multinomial logistic regression is widely used to reveal association between the response variable and exposure variable. In that case, relative risk of each category compared to the reference category can be considered, conditional on other fixed covariates. Other than (adjusted) relative risk, relative risks ratio (RRR) is often of interest in multinomial logistic regression.
+
+
+```{r}
+#library(logisticRR)
+#dat$multiY <- ifelse(dat$X == 1, rbinom(n, 1, 0.8) + dat$Y, rbinom(n, 1, 0.2) + dat$Y)
+#multiresult <- multiRR(multiY ~ X + W + Z, data = dat, boot = TRUE, n.boot = 1000)
+#apply(multiresult$boot.rr, 2, sd)
+#sqrt(multiresult$delta.var)
+
+## relative risk ratio (RRR)
+#print(multiresult$RRR)
+
+## relative risk (RR)
+#print(multiresult$RR)
+```
+
+Similar to the binary reponse, in multinomial logistic regression model, categorical exposure variable can be introduced; in this case, baseline value and comparative value of exposure variable should be specified. 
+
+```{r}
+#multinresult <- multinRR(multiY ~ W + X + Z, data = dat, basecov = 0, comparecov = 1, boot = TRUE, n.boot = 1000)
+#apply(multinresult$boot.rr, 2, sd)
+#sqrt(multinresult$delta.var)
+
+## relative risk ratio (RRR)
+#print(multinresult$RRR)
+## relative risk (RR)
+#print(multinresult$RR)
+```
+
+
 ## Airquality example
 
 We introduce [`airquality`](https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/airquality.html) data to illustrate the use of `logisticRR`. You can download the data set by :
@@ -289,3 +385,4 @@ ozone.fit.factor2 <- nominalRR(ozone1 ~ Temp.factor + Solar.R + Wind, data = ozo
 print(c(ozone.fit.factor$RR, ozone.fit.factor2$RR))
 print(1/ozone.fit.factor2$RR)
 ```
+

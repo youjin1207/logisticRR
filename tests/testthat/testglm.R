@@ -1,4 +1,5 @@
 library(logisticRR)
+library(nnet)
 
 test_that("Test whether logisticRR captures appropriate baseline covariates",{
 
@@ -117,5 +118,22 @@ test_that("Test whether estimated variance using Delta method and sampling varia
   var(ozone.fit200$boot.rr, na.rm = TRUE)
 
   expect_equal(ozone.fit20$delta.var, ozone.fit200$delta.var)
+
+})
+
+
+test_that("Test whether relative risks under multinomial regression model are reasonably produced",{
+  library(nnet)
+  data("airquality")
+  ozonedat <- na.omit(airquality)
+  # define binary ozone level
+  ozonedat$ozone3 <- ifelse(ozonedat$Ozone < quantile(ozonedat$Ozone, prob = 0.3), 0,
+                            ifelse(ozonedat$Ozone < quantile(ozonedat$Ozone, prob = 0.7), 1, 2))
+  ozonedat$Temp2 <- ozonedat$Temp / 10
+  ozone.fit.multi <- multiRR(ozone3 ~ Temp2 + Solar.R + Wind, data = ozonedat, basecov = min(ozonedat$Temp2),
+                             fixcov = data.frame(Solar.R = mean(ozonedat$Solar.R), Wind = mean(ozonedat$Wind)),
+                             boot = FALSE, n.boot = 1000)
+
+  expect_equal(ozone.fit.multi$RRR, ozone.fit.multi$RR / ozone.fit.multi$RR[1])
 
 })

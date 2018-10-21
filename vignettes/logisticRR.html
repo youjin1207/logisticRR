@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Youjin Lee" />
+
+
+<title>Deriving relative risk from logistic regression</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#header {
+text-align: center;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Deriving relative risk from logistic regression</h1>
+<h4 class="author"><em>Youjin Lee</em></h4>
+
+
+
+<div id="relative-risk-v.s.-odds-ratio" class="section level2">
+<h2>Relative risk v.s. odds ratio</h2>
+<p>Relative risk and odds ratio are often confused or interchanged. Especially while coefficients in logistic regression are directly interpreted as (adjusted) odds ratio, they are unwittingly translated as (adjusted) relative risks in many public health studies. In that relative risks are useful in many thousands of applications, instead of odds ratio, we propose a software tool to easily convert from odds ratio to relative risks under logistic regression. Unlike adjusted odds ratio conditional on other confounders, adjusted relative risks may vary depending on other confounders in the logistic model so we also analytically examine the effect of those confounders on the adjusted relative risk.</p>
+<div id="binary-or-continuous-exposure-variable" class="section level3">
+<h3>Binary or continuous exposure variable</h3>
+<p>Let us first define adjusted relative risks of binary exposure <span class="math inline">\(E\)</span> on binary outcome <span class="math inline">\(D\)</span> conditional on <span class="math inline">\(\mathbf{X}\)</span>.</p>
+<p><span class="math display">\[\frac{P(D = 1 \mid E = 1, \mathbf{X} )}{P(D = 1 \mid E = 0, \mathbf{X})}\]</span></p>
+<p>Generally speaking, when exposure variable of <span class="math inline">\(E\)</span> is continuous or ordinal, we can define adjusted relative risks as ratio between probability of observing <span class="math inline">\(D = 1\)</span> when <span class="math inline">\(E = z+1\)</span> over <span class="math inline">\(E = z\)</span> conditional on <span class="math inline">\(\mathbf{X}\)</span>. Unlike adjusted odds ratio, these ratio depend on baseline value of exposure <span class="math inline">\(z\)</span> under logistic regression.</p>
+<p><span class="math display">\[\frac{P(D = 1 \mid E = z+1, \mathbf{X} )}{P(D = 1 \mid E = z, \mathbf{X})}\]</span></p>
+</div>
+<div id="nominal-exposure-variable" class="section level3">
+<h3>Nominal exposure variable</h3>
+<p>On the other hand, when exposure variable is nominal, it is impossible to compare the probabilities in one unit change. Therefore, when a type of exposure variable is <code>factor</code>, we allow users to specify two values of exposure variable including baseline (<span class="math inline">\(z_{0}\)</span>) and comparative level (<span class="math inline">\(z_{1}\)</span>) and derive the relative risks given those two exposure levels.</p>
+<p><span class="math display">\[\frac{P(D = 1 \mid E = z_{1}, \mathbf{X} )}{P(D = 1 \mid E = z_{0}, \mathbf{X})}\]</span> The above is more generalized version. By setting <span class="math inline">\(z_{1} = 1\)</span> and <span class="math inline">\(z_{0} = 0\)</span> we can go back to binary case.</p>
+</div>
+</div>
+<div id="estimated-variance-of-relative-risk" class="section level2">
+<h2>Estimated variance of relative risk</h2>
+<p>In case of (adjusted) odds ratio derived from logistic regression, we can directly obtain variance-covariance matrix for coefficients using <code>glm</code> function in <code>R</code>. However, deriving variance of adjusted relative risks, as a function of those coefficients, is more challenging.</p>
+<p>We first provide a estimated variance of relative risk using Delta method upon estimated variance of odds ratio from <code>glm</code>. The second method to estimate variance is using sampling variance of bootstrap samples.</p>
+<div id="delta-method" class="section level3">
+<h3>Delta method</h3>
+<p>Let <span class="math inline">\(\boldsymbol{\beta}\)</span> be a vector of coefficients used in logistic regression and among them <span class="math inline">\(\beta_{1}\)</span> is a coefficient associated with an exposure variable of interest taking a value of <span class="math inline">\(z_{0}\)</span> as baseline level and <span class="math inline">\(z_{1}\)</span> as comparative level. Then we can represent the adjusted relative risk as a function of <span class="math inline">\(\boldsymbol{\beta}\)</span> conditional on <span class="math inline">\(\mathbf{X}\)</span>:</p>
+<p><span class="math display">\[g(\boldsymbol{\beta}) = \frac{1 + \exp(-\beta_{0} - \beta_{1} z_{0} -  \boldsymbol{\beta}^{T}_{2:p} \mathbf{X}) }{ 1 + \exp (-\beta_{0} - \beta_{1} z_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X}) }\]</span></p>
+<p>Then by Delta method, <span class="math display">\[var[g(\boldsymbol{\beta})] =  \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}^{T}  var(\boldsymbol{\beta}) \left\{\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}  \right\}\]</span> Note that <span class="math inline">\(\frac{\partial g(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}}\)</span> is <span class="math inline">\(p \times 1\)</span> and <span class="math inline">\(var(\boldsymbol{\beta})\)</span> is <span class="math inline">\(p \times p\)</span>, so <span class="math inline">\(var[g(\boldsymbol{\beta})]\)</span> is a scalar value.</p>
+<p>A <span class="math inline">\(p \times p\)</span> matrix of <span class="math inline">\(var{(\boldsymbol{\beta})}\)</span> is obtained by <code>summary(fit)$cov.unscaled</code> when <code>fit</code> is a <code>glm</code> object.</p>
+<p>Let <span class="math inline">\(e_{0} = \exp(-\beta_{0} - \beta_{1} z_{0} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})\)</span> and <span class="math inline">\(e_{1} = \exp (-\beta_{0} - \beta_{1} z_{1} - \boldsymbol{\beta}^{T}_{2:p} \mathbf{X})\)</span>.</p>
+<p><span class="math display">\[\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{0}} =  \frac{- e_{1} + e_{0}}{(1 + e_{1})^2 } = \frac{e_{0}(1 - \exp(-\beta_{1}(z_{1} - z_{0}) ) ) }{(1 + e_{1})^2}\]</span> <span class="math display">\[\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{1}} =  \frac{-z_{1} e_{1}( 1 + e_{0}) + z_{0} e_{0}(1 + e_{1})  }{(1 + e_{1})^2 }\]</span> For any <span class="math inline">\(j = 2,3,\ldots, p\)</span> where <span class="math inline">\(X_{j}\)</span> is a covariate of which effect is associated with <span class="math inline">\(\beta_{j}\)</span>: <span class="math display">\[\frac{\partial g(\boldsymbol{\beta})}{\partial \beta_{j}} = \frac{x_{j}(e_{0} - e_{1} ) }{ (1+e_{1})^2} = \frac{1 - \exp(-(z_{1} - z_{0})\beta_{1}) }{(1 + e_{1})^2}\]</span></p>
+<p>By combining information of estimated <span class="math inline">\(var{(\boldsymbol{\beta})}\)</span> and <span class="math inline">\(\frac{\partial g(\boldsymbol{\hat{\beta}})}{\partial \boldsymbol{\hat{\beta}}}\)</span>, we can derive the estimated variance of <span class="math inline">\(g(\boldsymbol{\beta})\)</span>.</p>
+</div>
+<div id="bootstrap" class="section level3">
+<h3>Bootstrap</h3>
+<p>In both of <code>logisticRR</code> and <code>nominalRR</code>, we add a logical input of <code>boot</code>: by setting <code>boot = TRUE</code> those functions print out a vector of <code>n.boot</code> number of (adjusted) relative risks.</p>
+</div>
+</div>
+<div id="examplary-data" class="section level2">
+<h2>Examplary Data</h2>
+<p>As a first example, we generate hypothetical data of size <span class="math inline">\(n=500\)</span>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">library</span>(logisticRR)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">n &lt;-<span class="st"> </span><span class="dv">500</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="kw">set.seed</span>(<span class="dv">1234</span>)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">X &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">0.3</span>)</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">W &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">0.3</span>); W[<span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span>n, n<span class="op">/</span><span class="dv">3</span>)] =<span class="st"> </span><span class="dv">2</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">Z &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, n)</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">Z[<span class="kw">sample</span>(<span class="dv">1</span><span class="op">:</span>n, n<span class="op">/</span><span class="dv">2</span>)] &lt;-<span class="st"> &quot;female&quot;</span>; Z &lt;-<span class="st"> </span><span class="kw">ifelse</span>(Z <span class="op">==</span><span class="st"> </span><span class="dv">0</span>, <span class="st">&quot;male&quot;</span>, Z)</a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">dummyZ &lt;-<span class="st"> </span><span class="kw">ifelse</span>(Z <span class="op">==</span><span class="st"> &quot;female&quot;</span>, <span class="dv">1</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">Y &lt;-<span class="st"> </span><span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="kw">plogis</span>(X <span class="op">-</span><span class="st"> </span>W <span class="op">+</span><span class="st"> </span><span class="dv">2</span><span class="op">*</span>dummyZ))</a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">dat &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(<span class="kw">cbind</span>(Y, X, W, Z))</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">dat<span class="op">$</span>X &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(dat<span class="op">$</span>X); dat<span class="op">$</span>X &lt;-<span class="st"> </span><span class="kw">ifelse</span>(dat<span class="op">$</span>X <span class="op">==</span><span class="st"> </span><span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">dat<span class="op">$</span>Y &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(dat<span class="op">$</span>Y); dat<span class="op">$</span>Y &lt;-<span class="st"> </span><span class="kw">ifelse</span>(dat<span class="op">$</span>Y <span class="op">==</span><span class="st"> </span><span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">dat<span class="op">$</span>W &lt;-<span class="st"> </span><span class="kw">as.factor</span>(dat<span class="op">$</span>W)</a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">dat<span class="op">$</span>Z &lt;-<span class="st"> </span><span class="kw">as.factor</span>(dat<span class="op">$</span>Z)</a>
+<a class="sourceLine" id="cb1-15" data-line-number="15"><span class="kw">head</span>(dat)</a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"><span class="co">#&gt;   Y X W      Z</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17"><span class="co">#&gt; 1 0 0 2   male</span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="co">#&gt; 2 0 0 2 female</span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="co">#&gt; 3 1 0 1 female</span></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20"><span class="co">#&gt; 4 0 0 0   male</span></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21"><span class="co">#&gt; 5 0 1 2 female</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22"><span class="co">#&gt; 6 0 0 2   male</span></a></code></pre></div>
+<p>The code below estimates variance of adjusted relative risks of binary <span class="math inline">\(X\)</span> on binary outcome of <span class="math inline">\(Y\)</span> by generating <code>n.boot = 200</code> bootstrap samples. Because we do not specify baseline level of exposure variable (<code>basecov</code>) nor the value of conditioning covariates of <code>W</code> and <code>Z</code> (<code>fixcov</code>), baseline exposure level is set to <code>0</code> as default. Since <code>W</code> and <code>Z</code> are both factor, they are fixed to their first level which are <code>0</code> and <code>female</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">simresult200 &lt;-<span class="st"> </span><span class="kw">logisticRR</span>(Y <span class="op">~</span><span class="st"> </span>X <span class="op">+</span><span class="st"> </span>W <span class="op">+</span><span class="st"> </span>Z, <span class="dt">data =</span> dat, <span class="dt">boot =</span> <span class="ot">TRUE</span>, <span class="dt">n.boot =</span> <span class="dv">200</span>)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">simresult200<span class="op">$</span>RR</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co">#&gt;        1 </span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="co">#&gt; 1.076041</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5"><span class="kw">var</span>(simresult200<span class="op">$</span>boot.rr)</a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"><span class="co">#&gt; [1] 0.0005360965</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">simresult200<span class="op">$</span>delta.var</a>
+<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="co">#&gt; [1] 0.0004270613</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="co">## print out conditioning </span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">simresult200<span class="op">$</span>fix.cov</a>
+<a class="sourceLine" id="cb2-12" data-line-number="12"><span class="co">#&gt;   W      Z</span></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13"><span class="co">#&gt; 1 0 female</span></a></code></pre></div>
+<p>This time we increase the number of bootstrap samples to <code>n.boot = 1000</code>. Note that sampling variance gets closer to the estimated variance using Delta method (<code>delta.var</code>).</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1">simresult1000 &lt;-<span class="st"> </span><span class="kw">logisticRR</span>(Y <span class="op">~</span><span class="st"> </span>X <span class="op">+</span><span class="st"> </span>W <span class="op">+</span><span class="st"> </span>Z, <span class="dt">data =</span> dat, <span class="dt">boot =</span> <span class="ot">TRUE</span>, <span class="dt">n.boot =</span> <span class="dv">1000</span>)</a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="kw">var</span>(simresult1000<span class="op">$</span>boot.rr)</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"><span class="co">#&gt; [1] 0.0004876841</span></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">simresult1000<span class="op">$</span>delta.var</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5"><span class="co">#&gt; [1] 0.0004270613</span></a></code></pre></div>
+<div id="adjusted-relative-risks-depending-on-confounders" class="section level3">
+<h3>Adjusted relative risks depending on confounders</h3>
+<p>We have a total of six combination of confounder variables. By the assumption made in logistic regression, adjusted odds ratio is consistent against of these confounders but adjusted relative risk is not.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">levels</span>(dat<span class="op">$</span>W)</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="co">#&gt; [1] &quot;0&quot; &quot;1&quot; &quot;2&quot;</span></a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="kw">levels</span>(dat<span class="op">$</span>Z)</a>
+<a class="sourceLine" id="cb4-4" data-line-number="4"><span class="co">#&gt; [1] &quot;female&quot; &quot;male&quot;</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">adjusted &lt;-<span class="st"> </span><span class="kw">cbind</span>(<span class="kw">rep</span>(<span class="kw">levels</span>(dat<span class="op">$</span>W), <span class="dv">2</span>), <span class="kw">rep</span>(<span class="kw">levels</span>(dat<span class="op">$</span>Z), <span class="dt">each =</span> <span class="dv">3</span>))</a>
+<a class="sourceLine" id="cb4-6" data-line-number="6">adjusted &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(adjusted)</a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="kw">names</span>(adjusted) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;W&quot;</span>, <span class="st">&quot;Z&quot;</span>)</a></code></pre></div>
+<p>Adjusted relative risk tends to be higher for male and for higher level of <code>W</code>.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="co">## compare with odds ratio </span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2">results &lt;-<span class="st"> </span><span class="kw">list</span>()</a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(adjusted)){</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4">  results[[i]] &lt;-<span class="st"> </span><span class="kw">logisticRR</span>(Y <span class="op">~</span><span class="st"> </span>X <span class="op">+</span><span class="st"> </span>W <span class="op">+</span><span class="st"> </span>Z, <span class="dt">data =</span> dat, <span class="dt">fixcov =</span> adjusted[i,], <span class="dt">boot =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">}</a>
+<a class="sourceLine" id="cb5-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb5-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="co">## adjusted relative risk</span></a>
+<a class="sourceLine" id="cb5-9" data-line-number="9"><span class="co"># female</span></a>
+<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="kw">print</span>(<span class="kw">c</span>(results[[<span class="dv">1</span>]]<span class="op">$</span>RR, results[[<span class="dv">2</span>]]<span class="op">$</span>RR, results[[<span class="dv">3</span>]]<span class="op">$</span>RR))</a>
+<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="co">#&gt;        1        1        1 </span></a>
+<a class="sourceLine" id="cb5-12" data-line-number="12"><span class="co">#&gt; 1.076041 1.206734 1.494543</span></a>
+<a class="sourceLine" id="cb5-13" data-line-number="13"><span class="co"># male</span></a>
+<a class="sourceLine" id="cb5-14" data-line-number="14"><span class="kw">print</span>(<span class="kw">c</span>(results[[<span class="dv">4</span>]]<span class="op">$</span>RR, results[[<span class="dv">5</span>]]<span class="op">$</span>RR, results[[<span class="dv">6</span>]]<span class="op">$</span>RR))</a>
+<a class="sourceLine" id="cb5-15" data-line-number="15"><span class="co">#&gt;        1        1        1 </span></a>
+<a class="sourceLine" id="cb5-16" data-line-number="16"><span class="co">#&gt; 1.650889 2.248270 2.811120</span></a>
+<a class="sourceLine" id="cb5-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb5-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb5-19" data-line-number="19"><span class="co">## adjusted odds ratio</span></a>
+<a class="sourceLine" id="cb5-20" data-line-number="20"><span class="co">## all the same : by the assumption of logistic regression</span></a>
+<a class="sourceLine" id="cb5-21" data-line-number="21"><span class="kw">print</span>(<span class="kw">exp</span>(<span class="kw">coefficients</span>(results[[<span class="dv">1</span>]]<span class="op">$</span>fit)[<span class="dv">2</span>]))</a>
+<a class="sourceLine" id="cb5-22" data-line-number="22"><span class="co">#&gt;        X </span></a>
+<a class="sourceLine" id="cb5-23" data-line-number="23"><span class="co">#&gt; 3.441811</span></a>
+<a class="sourceLine" id="cb5-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb5-25" data-line-number="25"><span class="co"># betas &lt;- coefficients(fit)</span></a>
+<a class="sourceLine" id="cb5-26" data-line-number="26"><span class="co"># exposed &lt;- exp(-predict(fit, expose.cov, type = &quot;link&quot;))</span></a>
+<a class="sourceLine" id="cb5-27" data-line-number="27"><span class="co"># unexposed &lt;- exp(-predict(fit, unexpose.cov, type = &quot;link&quot;))</span></a>
+<a class="sourceLine" id="cb5-28" data-line-number="28"><span class="co"># RR &lt;- (1 + unexposed) / (1 + exposed)</span></a></code></pre></div>
+<p>Let us change the prevalence of exposure variable (<span class="math inline">\(X\)</span>).</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1">dat2 &lt;-<span class="st"> </span>dat </a>
+<a class="sourceLine" id="cb6-2" data-line-number="2">dat2<span class="op">$</span>Y &lt;-<span class="st"> </span><span class="kw">ifelse</span>(dat<span class="op">$</span>Y <span class="op">==</span><span class="st"> </span><span class="dv">1</span>, <span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">0.2</span>), <span class="kw">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">0.01</span>))</a>
+<a class="sourceLine" id="cb6-3" data-line-number="3"><span class="co">## compare with odds ratio </span></a>
+<a class="sourceLine" id="cb6-4" data-line-number="4">results2 &lt;-<span class="st"> </span><span class="kw">list</span>()</a>
+<a class="sourceLine" id="cb6-5" data-line-number="5"><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(adjusted)){</a>
+<a class="sourceLine" id="cb6-6" data-line-number="6">  results2[[i]] &lt;-<span class="st"> </span><span class="kw">logisticRR</span>(Y <span class="op">~</span><span class="st"> </span>X <span class="op">+</span><span class="st"> </span>W <span class="op">+</span><span class="st"> </span>Z, <span class="dt">data =</span> dat2, <span class="dt">fixcov =</span> adjusted[i,], <span class="dt">boot =</span> <span class="ot">TRUE</span>, <span class="dt">n.boot =</span> <span class="dv">1000</span>)</a>
+<a class="sourceLine" id="cb6-7" data-line-number="7">}</a>
+<a class="sourceLine" id="cb6-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb6-9" data-line-number="9"></a>
+<a class="sourceLine" id="cb6-10" data-line-number="10"><span class="co">## adjusted relative risk</span></a>
+<a class="sourceLine" id="cb6-11" data-line-number="11"><span class="co"># female</span></a>
+<a class="sourceLine" id="cb6-12" data-line-number="12"><span class="kw">print</span>(<span class="kw">c</span>(results2[[<span class="dv">1</span>]]<span class="op">$</span>RR, results2[[<span class="dv">2</span>]]<span class="op">$</span>RR, results2[[<span class="dv">3</span>]]<span class="op">$</span>RR))</a>
+<a class="sourceLine" id="cb6-13" data-line-number="13"><span class="co">#&gt;        1        1        1 </span></a>
+<a class="sourceLine" id="cb6-14" data-line-number="14"><span class="co">#&gt; 1.173466 1.177487 1.186902</span></a>
+<a class="sourceLine" id="cb6-15" data-line-number="15"><span class="co"># male</span></a>
+<a class="sourceLine" id="cb6-16" data-line-number="16"><span class="kw">print</span>(<span class="kw">c</span>(results2[[<span class="dv">4</span>]]<span class="op">$</span>RR, results2[[<span class="dv">5</span>]]<span class="op">$</span>RR, results2[[<span class="dv">6</span>]]<span class="op">$</span>RR))</a>
+<a class="sourceLine" id="cb6-17" data-line-number="17"><span class="co">#&gt;        1        1        1 </span></a>
+<a class="sourceLine" id="cb6-18" data-line-number="18"><span class="co">#&gt; 1.184617 1.187547 1.194245</span></a>
+<a class="sourceLine" id="cb6-19" data-line-number="19"></a>
+<a class="sourceLine" id="cb6-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb6-21" data-line-number="21"><span class="co">## adjusted odds ratio</span></a>
+<a class="sourceLine" id="cb6-22" data-line-number="22"><span class="co">## all the same : by the assumption of logistic regression</span></a>
+<a class="sourceLine" id="cb6-23" data-line-number="23"><span class="kw">print</span>(<span class="kw">exp</span>(<span class="kw">coefficients</span>(results2[[<span class="dv">1</span>]]<span class="op">$</span>fit)[<span class="dv">2</span>]))</a>
+<a class="sourceLine" id="cb6-24" data-line-number="24"><span class="co">#&gt;        X </span></a>
+<a class="sourceLine" id="cb6-25" data-line-number="25"><span class="co">#&gt; 1.209375</span></a>
+<a class="sourceLine" id="cb6-26" data-line-number="26"></a>
+<a class="sourceLine" id="cb6-27" data-line-number="27"><span class="co"># betas &lt;- coefficients(fit)</span></a>
+<a class="sourceLine" id="cb6-28" data-line-number="28"><span class="co"># exposed &lt;- exp(-predict(fit, expose.cov, type = &quot;link&quot;))</span></a>
+<a class="sourceLine" id="cb6-29" data-line-number="29"><span class="co"># unexposed &lt;- exp(-predict(fit, unexpose.cov, type = &quot;link&quot;))</span></a>
+<a class="sourceLine" id="cb6-30" data-line-number="30"><span class="co"># RR &lt;- (1 + unexposed) / (1 + exposed)</span></a></code></pre></div>
+<div class="figure">
+<img src="data:image/png;base64,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CIgUAwEBBBBA4H8C27Ztk++//16KFSsmDodD1qxZI6tWrZImTZr8L5KL71q1aiUnTpwwd31dPMStaEuXLjVl1KcVoRhOnTpl/M+tm56PrKwsiYuLO3dXwD7boQwBqywZIYBAyAnwBCDkTikVQgABbwTeffddc3j79u2lbdu25n1eTwG0cTBmzBi54IILpEKFCnLHHXdIampqrqzXrVsnbdq0kY4dO2Zvf+GFF+TSSy+VJ598MnvbL7/8Yra1bNkye5see80110j58uVFuxBpl5MXX3wxe/9tt90mP/74o/n897//Xa688srsfdotSLshlSxZUi655BJ56qmnzAWzM4IrZXfGzfnz6aefNuVUox49eph6P//88ybKH3/8If3795fKlStLlSpV5IYbbpC9e/fmPPy890ePHpW//e1v5ilGUlKSaWTde++9cubMGTly5Ih06NAh+5iuXbuaeuiGW2+91bguWrRIDh06JM2bNzfl2rhxY3Z8fXqgnmr9888/m+2FuWQfnOONOmoa33zzjdStW1cuvvhiWb58ea4yOKO/99570rhxYylevLiUKlVK/vKXv4h2A8svbNmyJbuMr776qommDcbhw4dLrVq1TANHPfv16yfqS0AAAQR8JmD9ISAggAACCFgC1l1lR82aNR3WL1jH22+/7bAu/M370qVLO6wuKLmMHnvsMbNP45YtW9Zh3YV3WHekzTbrws/EtZ4kmM/x8fHZx953331mm3VRl73NuqA026ynDmbbsWPHHBUrVjTb6tWr57C6+Tiio6PN588//9zE0Tw0b+fLuug0262L3Oy4Wq7IyEgTZ8CAAdn5uVL27Mg53gwePNikVa5cuex8rQtXR3p6usO6MDbbYmJiHMnJyeZ9pUqVHFoXDdaFvtl2/fXXZ6dode0x29TH6a71GTJkiGPfvn1mn7N++nPgwIHmWOtC3OybPn26+WxdpJvPjz/+eHbauk+PqVGjhjmvrrhkH5zjjdUwMek466yeWrZzy6DnRfPT70Dr1q2z91sX8A7r4t2kaPX9N3G0flbjx5GSkmI+X3311Y6MjAwTx2pEmW1Wo9JhNUAd+t3TdHU7AQEEEPCVAE8ArN+sBAQQQEAF/v3vf8uOHTskNjbW3OG2LlbNe70b/a9//Ssb6fjx4/LSSy+Zz9YFvfz++++ycuVKc8ddN1q/oLPjevJG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gCS1BmVBAAEEEEAAAQQQQCBiAQKAiIHJHgEEEEAAAQQQQACBJAkQACSpNSgLAggggAACCCCAAAIRCxAARAxM9ggggAACCCCAAAIIJEmAACBJrUFZEEAAAQQQQAABBBCIWIBfAo4YOBPZf/rpp/bRRx/Z5s2bM5FdTuRx8OBBW7NmjXfJiQplQSW2bNniS7l69eosKG1uFHH9+vV24MABw7x621PmHF+q15zjS/V6a286vui7lHOLAvtDhw6ZzrnyIdUIXMqHimZzHQcMGGArVqywOnXqZHM1Mlr2rVu3Wo0aNTKaJ5mVLhAeKnAv3SnTaw8fPmxHHcXN2ky7lpYf5qXpRLOO40s0rmXlKvcWLVqUtVnerFfw36NHD1uwYEHO15kAIOebmAoigAACCCCAAAIIIFAgwGWlAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueIYAAAggggAACCCCQ8wIEADnfxFQQAQQQQAABBBBAAIECAQKAAgueVUHg448/trffftv27NlThVyS99YgCJJXqBwpUbba7ty509555x3TZz7X0oEDB3KtSomoz6effmqHDh1KRFkqUoj333/ftm7dWpG3ZMW2hw8fzopyZlshcc2uFiMAyK72SmRp77//fvvsZz9rJ510kk2aNCnWMn7zm9+0s88+u8plWL16tX3jG9+w4447zk444QT76U9/WuU8sz2DWrVq2W9/+9sqV+O+++6zPn36WJ06dax79+62dOnSKudZHRkoYBk6dKg1atTIPv/5z9sLL7xQHbstcR+Zao9wB7NmzbImTZqEL/P28fHHH7caNWpk7MRXJ0UXXXSRXXHFFVljqhP/448/3tq2bWvdunWLtdyZao9///vfNmDAAGvQoIE/9px++un21FNPxVq3uHeeqe/LOXPmWJcuXUzHJB0fL730Utu4cWPc1WP/ZQgQAJQBxOqyBXRyfNppp9nrr79u//M//1P2GxK+xf79+23IkCGmE75//OMf9uMf/9imTJliP/vZzxJe8uQX79lnn/UnQvJ9/vnn/eemf//+9q9//SvxhX/ttdfsoYcesptuusneeustO+OMMxJf5vIWcN68efa9733Pf+bL+x62K1vgo48+srFjx9qTTz5Z9sYJ2mLmzJm2efNmH5y/9NJLCSpZ5Yqyfft2u/DCC+0///mP/eEPf7AnnnjCWrRoYQMHDrRVq1ZVLlPe5QXmz59vl112mSmg+vvf/26/+MUvbOXKlT7Yysa7XvnUrEfnU2WpazQC27Zts29/+9vWqVOnaHZQzbn+8pe/tP/+97+mK6LHHnusvwL23nvv2W233WbXXXedv8pRzUXKmd1997vfta9//et21VVX+TrNmDHDnnvuOfvNb35jd999d6LrqZMHpW9961t24oknJrqs5S3c7t277corr7QHHnjA2rdvb7ryS8qMwCuvvOI/KzqRbtasWWYyraZc9Fnv3LmznXPOOdW0x2h3owB306ZN9pe//MW+9KUv+Z316NHDWrdubffcc4+deuqp0RYgh3P/3e9+5+8WyVF3zvSZ0V0W3S3VXdLevXvncO2zu2rcAcju9ou19G+++aaP+nUS8fvf/z71XIXS1VJdcdHtwC984Qv2wx/+sFCfaR0kFi5caGPGjLGWLVta165d7cEHH7R9+/b5YKJ58+Y2aNAgW7JkSaE6PvbYY3bWWWf5fHUFR1eP16xZU2iboi90Yqnb2PXr1/ddTnT1p7S0aNEin69O/sN08cUX+6Dg5ZdfDhcl8lFX1fXFprsxF1xwgXdSO2zYsMF0QiJ3uekEPP0Wra5UTpw40U455RSrW7euPxm89tprTXdDSkp79+71J4/qKqCuI1/96lft3XffLWlzvz+11de+9rVC28g26VdI9fnWlVwllV9Xy8NU2ucrye2h8uszoQBMJ0gKzvQFni1Jdx51N0aBuj63rVq18p9r3bm7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CCCAAAJxCRAAxCXPfhFAAAEEEEAAAQQQiEGAACAGdHaJAAIIIIAAAggggEBcAgQAccmzXwQQQCDBAnv27LH33nsvthJu3LjRdu3aFdv+2TECCCCQywIEALncutQNAQQQqKTANddcY0uXLvXvHjx4sNWoUaPEf5MmTTpiLw8++KDffvXq1YXWbdiwwS9v0KCBffzxx4XWzZo1y69799137eWXX7ZRo0YVWs8LBBBAAIHMCBydmWzIBQEEEEAgVwRee+01++c//2k6IVcaN26cKQgomv785z/b4sWLrWPHjkVXWZ8+ffyy559/3rp165Za/9RTT1mzZs1s27ZtpnW9e/dOrXvuuefsxBNPtHbt2vl/06ZNsxdeeMF69OiR2oYnCCCAAAJVFyAAqLohOSCAAAI5JXDjjTfa2LFj/dV4VSz9JD2s6MKFC+3pp5+2yy67zIYPHx4uTj22aNHCTj75ZH+Sf+WVV6aWKwC46KKL/HI9T89bAcB5552X2vbaa6+166+/3p599tnUMp4ggAACCFRdgC5AVTckBwQQQCBnBJ555hlbtGiRXXzxxSXWSV10dOLfoUMHmzlzZonb9e3b15/ohxscPnzYlixZYueee66df/75/u5BuE53BN58881CAcCAAQPspZdesvnz54eb8YgAAgggkAEBAoAMIJIFAgggkCsCTz75pHXv3t2aNGlSbJXUb//SSy/1/fcfffRRq1u3brHbaaECgLfffts++OADv80rr7xiO3bs8Cf5utK/cuVK2759u1+nq/8aZ6D3hKlevXr+DoHKREIAAQQQyJwAAUDmLMkJAQQQyHqBNWvW2AknnFBiPW644QZ78cUX7a677vJdfErc0K0455xz/Em9+vorqctPly5d/BiAcJ26ESkpADjllFOsadOm/nX4n8YEqEwkBBBAAIHMCRAAZM6SnBBAAIGsF1i7dq21bt262Ho8/vjj9utf/9qPDxg6dGix26Qv1Ml8586dU92AFACEffw1C9Dpp59uy5Yt829Zvnx5al16HiqLykRCAAEEEMicAAFA5izJCQEEEMhqAfXRX79+vTVv3vyIerzzzjs2cuRI3z1o+vTpR6wvaYG69Ggmn3379tmKFSsKneQrGNB0n/v377dVq1YVWhfmp8HEW7du9e8Pl/GIAAIIIFA1AQKAqvnxbgQQQCBnBI466iirXbu2bdmypVCdwn7/Wv/II4/YMcccU2h9aS8UAKjvv7r4KMBQ158wKQB49dVXfYCgZekzAoXbqCza77HHHhsu4hEBBBBAoIoCTANaRUDejgACCOSSgK64r1u3rlCVNBWnBuxqNp62bdsWWlfWC53w79271+677z5/96B+/fqpt/Tq1cs/v/vuu+2MM84wDfotmlQWdSWqWbNm0VW8RgABBBCopAABQCXheBsCCCCQiwI9e/b03XLCuunK/W233eZP0Ddu3OgH/4brwsc2bdpYv379/A+HaQrR2bNnp07YGzVq5Af3zp071zSAOD3pqr6CAM0mpN8eKC4pAFCZSAgggAACmRMgAMicJTkhgAACWS/Qv39/e+ihh3yfe03xqZN+Jc38o3/FJc3XrwBg9erV9vDDD9v999+fCgC0vboB6ZeFwwHA6XlomX4boLh1hw4d8gOAL7/88vS38BwBBBBAoIoCNQKXqpgHb0cAAQQQyBGBjz76yE/vOW7cOLvmmmsqXKvTTjvN9/mv8BuLecM999xjkyZN8l2SiuseVMxbWIQAAgggUA4BBgGXA4lNEEAAgXwRqFWrlk2dOtVP9/nJJ59UqNrqy69f+M1E0rWpadOm2a233lrs2IBM7IM8EEAAgXwV4A5AvrY89UYAAQRKEejTp4+NGTPGhg0bVspWhVft3LnTGjZsWHhhJV9pwPHNN9/sxyPoF4JJCCCAAAKZEyAAyJwlOSGAAAI5I6DfA1D//+Km5qyOSurXgxs3bmzt27evjt2xDwQQQCCvBAgA8qq5qSwCCCCAAAIIIIBAvgswBiDfPwHUHwEEEEAAAQQQQCCvBAgA8qq5qSwCCCCAAAIIIIBAvgsQAOT7J4D6I4AAAggggAACCOSVAAFAXjU3lUUAAQQQQAABBBDIdwECgHz/BFB/BBBAAAEEEEAAgbwSIADIq+amsggggAACCCCAAAL5LkAAkO+fAOqPAAIIIIAAAgggkFcCBAB51dxUFgEEEEAAAQQQQCDfBf4XXD6mWDgoza4AAAAASUVORK5CYII=" alt=" Plotting the distribution of adjusted relative risks for each combination of confounders. Each black dot denotes point estimate of adjusted relative risk and red horizontal line denotes adjusted odds ratio which is independent of the levels of confounders." />
+<p class="caption"> Plotting the distribution of adjusted relative risks for each combination of confounders. Each black dot denotes point estimate of adjusted relative risk and red horizontal line denotes adjusted odds ratio which is independent of the levels of confounders.</p>
+</div>
+</div>
+</div>
+<div id="airquality-example" class="section level2">
+<h2>Airquality example</h2>
+<p>We introduce <a href="https://stat.ethz.ch/R-manual/R-devel/library/datasets/html/airquality.html"><code>airquality</code></a> data to illustrate the use of <code>logisticRR</code>. You can download the data set by :</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="kw">data</span>(<span class="st">&quot;airquality&quot;</span>)</a></code></pre></div>
+<p>Because outcome variable of <code>Ozone</code> is continuous, we are going to binarize this variable into <code>ozone1</code> (top 10% take 1 and 0 otherwise), <code>ozone2</code> (top 20% take 1 and 0 otherwise), and <code>ozone3</code> (top 30% take 1 and 0 otherwise).</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="co"># delete observations having NAs </span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">ozonedat &lt;-<span class="st"> </span><span class="kw">na.omit</span>(airquality)</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="co"># define binary ozone level</span></a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">ozonedat<span class="op">$</span>ozone1 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(ozonedat<span class="op">$</span>Ozone <span class="op">&lt;</span><span class="st"> </span><span class="kw">quantile</span>(ozonedat<span class="op">$</span>Ozone, <span class="dt">prob =</span> <span class="fl">0.1</span>), <span class="dv">1</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb8-5" data-line-number="5">ozonedat<span class="op">$</span>ozone2 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(ozonedat<span class="op">$</span>Ozone <span class="op">&lt;</span><span class="st"> </span><span class="kw">quantile</span>(ozonedat<span class="op">$</span>Ozone, <span class="dt">prob =</span> <span class="fl">0.2</span>), <span class="dv">1</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb8-6" data-line-number="6">ozonedat<span class="op">$</span>ozone3 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(ozonedat<span class="op">$</span>Ozone <span class="op">&lt;</span><span class="st"> </span><span class="kw">quantile</span>(ozonedat<span class="op">$</span>Ozone, <span class="dt">prob =</span> <span class="fl">0.3</span>), <span class="dv">1</span>, <span class="dv">0</span>)</a></code></pre></div>
+<p>As an exposure variable of main interest, we use numerical <code>Temp</code> (temperature). Because a range of <code>Temp</code> is wide we devide it by 10 and use <code>Temp2</code> in the model so that one unit change of <code>Temp2</code> is ten unit (10 Fahrenheit) in <code>Temp</code>.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">summary</span>(ozonedat<span class="op">$</span>Temp)</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="co">#&gt;   57.00   71.00   79.00   77.79   84.50   97.00</span></a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">ozonedat<span class="op">$</span>Temp2 &lt;-<span class="st"> </span>ozonedat<span class="op">$</span>Temp <span class="op">/</span><span class="st"> </span><span class="dv">10</span></a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="kw">summary</span>(ozonedat<span class="op">$</span>Temp2)</a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="co">#&gt;    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. </span></a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="co">#&gt;   5.700   7.100   7.900   7.779   8.450   9.700</span></a></code></pre></div>
+<p>As other confounding variables, we chose solar radiation (<code>Solar.R</code>) and average wind speed (<code>Wind</code>) so that <code>formula</code> used for <code>glm</code> is <code>ozone1 ~ Temp2 + Solar.R + Wind</code>, for example. We specify conditioning confounder values as an average of each variable by <code>fixcov = data.frame(Solar.R = mean(ozonedat$Solar.R), Wind = mean(ozonedat$Wind))</code>.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">ozone.fit1 &lt;-<span class="st"> </span><span class="kw">logisticRR</span>(ozone1 <span class="op">~</span><span class="st"> </span>Temp2 <span class="op">+</span><span class="st">  </span>Solar.R <span class="op">+</span><span class="st"> </span>Wind, <span class="dt">data =</span> ozonedat, <span class="dt">basecov =</span> <span class="kw">min</span>(ozonedat<span class="op">$</span>Temp2),</a>
+<a class="sourceLine" id="cb10-2" data-line-number="2">                        <span class="dt">fixcov =</span> <span class="kw">data.frame</span>(<span class="dt">Solar.R =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Solar.R), <span class="dt">Wind =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Wind)), </a>
+<a class="sourceLine" id="cb10-3" data-line-number="3">                        <span class="dt">boot =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb10-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5">ozone.fit2 &lt;-<span class="st"> </span><span class="kw">logisticRR</span>(ozone2 <span class="op">~</span><span class="st"> </span>Temp2 <span class="op">+</span><span class="st">  </span>Solar.R <span class="op">+</span><span class="st"> </span>Wind, <span class="dt">data =</span> ozonedat, <span class="dt">basecov =</span> <span class="kw">min</span>(ozonedat<span class="op">$</span>Temp2),</a>
+<a class="sourceLine" id="cb10-6" data-line-number="6">                        <span class="dt">fixcov =</span> <span class="kw">data.frame</span>(<span class="dt">Solar.R =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Solar.R), <span class="dt">Wind =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Wind)), </a>
+<a class="sourceLine" id="cb10-7" data-line-number="7">                        <span class="dt">boot =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb10-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb10-9" data-line-number="9">ozone.fit3 &lt;-<span class="st"> </span><span class="kw">logisticRR</span>(ozone3 <span class="op">~</span><span class="st"> </span>Temp2 <span class="op">+</span><span class="st">  </span>Solar.R <span class="op">+</span><span class="st"> </span>Wind, <span class="dt">data =</span> ozonedat, <span class="dt">basecov =</span> <span class="kw">min</span>(ozonedat<span class="op">$</span>Temp2),</a>
+<a class="sourceLine" id="cb10-10" data-line-number="10">                        <span class="dt">fixcov =</span> <span class="kw">data.frame</span>(<span class="dt">Solar.R =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Solar.R), <span class="dt">Wind =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Wind)), </a>
+<a class="sourceLine" id="cb10-11" data-line-number="11">                        <span class="dt">boot =</span> <span class="ot">FALSE</span>)</a></code></pre></div>
+<p>As prevalence of outcome is smaller (<code>ozone1</code> &lt; <code>ozone2</code> &lt; <code>ozone3</code>), estimated adjusted relative risk is closer to adjusted odds ratio.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="kw">print</span>(<span class="kw">c</span>(ozone.fit1<span class="op">$</span>RR, ozone.fit2<span class="op">$</span>RR, ozone.fit3<span class="op">$</span>RR))</a>
+<a class="sourceLine" id="cb11-2" data-line-number="2"><span class="co">#&gt;         1         1         1 </span></a>
+<a class="sourceLine" id="cb11-3" data-line-number="3"><span class="co">#&gt; 0.7644533 0.5527379 0.6431837</span></a>
+<a class="sourceLine" id="cb11-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb11-5" data-line-number="5"><span class="co">## odds ratio</span></a>
+<a class="sourceLine" id="cb11-6" data-line-number="6"><span class="kw">exp</span>(ozone.fit1<span class="op">$</span>fit<span class="op">$</span>coefficients[<span class="dv">2</span>])</a>
+<a class="sourceLine" id="cb11-7" data-line-number="7"><span class="co">#&gt;     Temp2 </span></a>
+<a class="sourceLine" id="cb11-8" data-line-number="8"><span class="co">#&gt; 0.7600622</span></a></code></pre></div>
+<p>Next we are going to use <code>nominalRR</code> when an exposure variable is converted into nominal variable of <code>Temp.factor</code> having three categories – <code>low</code>, <code>medium</code>, and <code>high</code>.</p>
+<p>Note that adjusted relative risk when <code>basecov = &quot;low&quot;, comparecov = &quot;medium&quot;</code> is the reciprocal of that when <code>basecov = &quot;medium&quot;, comparecov = &quot;low&quot;</code>.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb12-1" data-line-number="1"><span class="co"># define binary ozone level</span></a>
+<a class="sourceLine" id="cb12-2" data-line-number="2">ozonedat<span class="op">$</span>ozone1 &lt;-<span class="st"> </span><span class="kw">ifelse</span>(ozonedat<span class="op">$</span>Ozone <span class="op">&lt;</span><span class="st"> </span><span class="kw">quantile</span>(ozonedat<span class="op">$</span>Ozone, <span class="dt">prob =</span> <span class="fl">0.1</span>), <span class="dv">1</span>, <span class="dv">0</span>)</a>
+<a class="sourceLine" id="cb12-3" data-line-number="3">ozonedat<span class="op">$</span>Temp.factor &lt;-<span class="st"> </span><span class="kw">ifelse</span>(ozonedat<span class="op">$</span>Temp <span class="op">&lt;=</span><span class="st"> </span><span class="kw">quantile</span>(ozonedat<span class="op">$</span>Temp, <span class="dt">prob =</span> <span class="fl">0.25</span>), <span class="st">&quot;low&quot;</span>,</a>
+<a class="sourceLine" id="cb12-4" data-line-number="4">                                 <span class="kw">ifelse</span>(ozonedat<span class="op">$</span>Temp <span class="op">&gt;</span><span class="st"> </span><span class="kw">quantile</span>(ozonedat<span class="op">$</span>Temp, <span class="dt">prob =</span> <span class="fl">0.8</span>), <span class="st">&quot;high&quot;</span>, <span class="st">&quot;medium&quot;</span>))</a>
+<a class="sourceLine" id="cb12-5" data-line-number="5">ozonedat<span class="op">$</span>Temp.factor &lt;-<span class="st"> </span><span class="kw">as.factor</span>(ozonedat<span class="op">$</span>Temp.factor)</a>
+<a class="sourceLine" id="cb12-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb12-7" data-line-number="7">ozone.fit.factor &lt;-<span class="st"> </span><span class="kw">nominalRR</span>(ozone1 <span class="op">~</span><span class="st"> </span>Temp.factor <span class="op">+</span><span class="st"> </span>Solar.R <span class="op">+</span><span class="st"> </span>Wind, <span class="dt">data =</span> ozonedat,</a>
+<a class="sourceLine" id="cb12-8" data-line-number="8">                                <span class="dt">basecov =</span> <span class="st">&quot;low&quot;</span>, <span class="dt">comparecov =</span> <span class="st">&quot;medium&quot;</span>,</a>
+<a class="sourceLine" id="cb12-9" data-line-number="9">                                <span class="dt">fixcov =</span> <span class="kw">data.frame</span>(<span class="dt">Solar.R =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Solar.R), <span class="dt">Wind =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Wind)), <span class="dt">boot =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb12-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb12-11" data-line-number="11">ozone.fit.factor2 &lt;-<span class="st"> </span><span class="kw">nominalRR</span>(ozone1 <span class="op">~</span><span class="st"> </span>Temp.factor <span class="op">+</span><span class="st"> </span>Solar.R <span class="op">+</span><span class="st"> </span>Wind, <span class="dt">data =</span> ozonedat,</a>
+<a class="sourceLine" id="cb12-12" data-line-number="12">                                 <span class="dt">basecov =</span> <span class="st">&quot;medium&quot;</span>, <span class="dt">comparecov =</span> <span class="st">&quot;low&quot;</span>,</a>
+<a class="sourceLine" id="cb12-13" data-line-number="13">                                 <span class="dt">fixcov =</span> <span class="kw">data.frame</span>(<span class="dt">Solar.R =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Solar.R), <span class="dt">Wind =</span> <span class="kw">mean</span>(ozonedat<span class="op">$</span>Wind)), <span class="dt">boot =</span> <span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb12-14" data-line-number="14"></a>
+<a class="sourceLine" id="cb12-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb12-16" data-line-number="16"><span class="kw">print</span>(<span class="kw">c</span>(ozone.fit.factor<span class="op">$</span>RR, ozone.fit.factor2<span class="op">$</span>RR))</a>
+<a class="sourceLine" id="cb12-17" data-line-number="17"><span class="co">#&gt;         1         1 </span></a>
+<a class="sourceLine" id="cb12-18" data-line-number="18"><span class="co">#&gt; 0.8622041 1.1598181</span></a>
+<a class="sourceLine" id="cb12-19" data-line-number="19"><span class="kw">print</span>(<span class="dv">1</span><span class="op">/</span>ozone.fit.factor2<span class="op">$</span>RR)</a>
+<a class="sourceLine" id="cb12-20" data-line-number="20"><span class="co">#&gt;         1 </span></a>
+<a class="sourceLine" id="cb12-21" data-line-number="21"><span class="co">#&gt; 0.8622041</span></a></code></pre></div>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

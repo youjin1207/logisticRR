@@ -132,7 +132,7 @@ printnRR <- function(formula, basecov, comparecov, fixcov = NULL, data){
     for (j in (q+1):n.par) {
       if (names(coefficients(fit))[j] %in% names(fixcov)) {
         tmp <- which(names(fixcov) %in% names(coefficients(fit))[j])
-        B.vec[j] <- as.numeric(fixcov[tmp])*(-exposed + unexposed) / (1 + exposed)^2
+        B.vec[j] <- as.numeric(as.character(fixcov[tmp]))*(-exposed + unexposed) / (1 + exposed)^2
       } else if (sum(startsWith(names(coefficients(fit))[j], names(fixcov))) > 0) {
         ## factor
         tmp <- which(startsWith(names(coefficients(fit))[j], names(fixcov)))
