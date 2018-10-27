@@ -282,30 +282,30 @@ When reponse variable takes more than two values, multinomial logistic regressio
 
 
 ```{r}
-#library(logisticRR)
-#dat$multiY <- ifelse(dat$X == 1, rbinom(n, 1, 0.8) + dat$Y, rbinom(n, 1, 0.2) + dat$Y)
-#multiresult <- multiRR(multiY ~ X + W + Z, data = dat, boot = TRUE, n.boot = 1000)
-#apply(multiresult$boot.rr, 2, sd)
-#sqrt(multiresult$delta.var)
+library(logisticRR)
+dat$multiY <- ifelse(dat$X == 1, rbinom(n, 1, 0.8) + dat$Y, rbinom(n, 1, 0.2) + dat$Y)
+multiresult <- multiRR(multiY ~ X + W + Z, data = dat, boot = TRUE, n.boot = 1000)
+apply(multiresult$boot.rr, 2, sd)
+sqrt(multiresult$delta.var)
 
 ## relative risk ratio (RRR)
-#print(multiresult$RRR)
+print(multiresult$RRR)
 
 ## relative risk (RR)
-#print(multiresult$RR)
+print(multiresult$RR)
 ```
 
 Similar to the binary reponse, in multinomial logistic regression model, categorical exposure variable can be introduced; in this case, baseline value and comparative value of exposure variable should be specified. 
 
 ```{r}
-#multinresult <- multinRR(multiY ~ W + X + Z, data = dat, basecov = 0, comparecov = 1, boot = TRUE, n.boot = 1000)
-#apply(multinresult$boot.rr, 2, sd)
-#sqrt(multinresult$delta.var)
+multinresult <- multinRR(multiY ~ W + X + Z, data = dat, basecov = 0, comparecov = 1, boot = TRUE, n.boot = 1000)
+apply(multinresult$boot.rr, 2, sd)
+sqrt(multinresult$delta.var)
 
 ## relative risk ratio (RRR)
-#print(multinresult$RRR)
+print(multinresult$RRR)
 ## relative risk (RR)
-#print(multinresult$RR)
+print(multinresult$RR)
 ```
 
 

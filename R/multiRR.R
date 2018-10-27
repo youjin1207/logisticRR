@@ -218,7 +218,7 @@ printmRR <- function(formula, basecov = 0, fixcov = NULL, data){
 #' W[sample(1:n, n/3)] = 2
 #' Y <- rbinom(n, 1, plogis(X - W))
 #' dat <- as.data.frame(cbind(Y, X, W))
-#' result <- multiRR(W ~ X + Y, basecov = 0, data = dat, boot = TRUE, n.boot = 500)
+#' result <- multiRR(W ~ X + Y, basecov = 0, data = dat, boot = TRUE, n.boot = 100)
 #' print(apply(result$boot.rr, 2, sd)) # estimated standard errors using Delta method
 #' print(sqrt(result$delta.var)) # estimated standard errors using bootstrap
 #'
