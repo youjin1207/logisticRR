@@ -2,13 +2,14 @@
 [![DOI](https://zenodo.org/badge/144892836.svg)](https://zenodo.org/badge/latestdoi/144892836)
 ![![Downloads badge](http://cranlogs.r-pkg.org/badges/logisticRR)](http://cranlogs.r-pkg.org/badges/logisticRR?color=red)
  [![](http://cranlogs.r-pkg.org/badges/grand-total/logisticRR?color=yellow)](https://CRAN.R-project.org/package=logisticRR)
+![![version badge](http://www.r-pkg.org/badges/version-last-release/logisticRR)](http://www.r-pkg.org/badges/version-last-release/logisticRR?color=orange)	
+
 
 # Overview
 
-
 ## Package information
 
-- Version: 0.1.0
+- Version: 0.2.0
 - Maintainer : Youjin Lee (<ylee160@jhu.edu>)
 - Imports : stats, nnet
 
