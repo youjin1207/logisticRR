@@ -90,8 +90,8 @@ printnRR <- function(formula, basecov, comparecov, fixcov = NULL, data){
   basecov <- levels(as.factor(data[ ,names(data) == varnames[1]]))[baseind]
   comparecov <- levels(as.factor(data[ ,names(data) == varnames[1]]))[compareind]
 
-  expose.cov <- data.frame(as.factor(comparecov)); names(expose.cov) <- varnames[1]
-  unexpose.cov <- data.frame(as.factor(basecov)); names(unexpose.cov) <- varnames[1]
+  expose.cov <- data.frame(as.factor(comparecov), stringsAsFactors = TRUE); names(expose.cov) <- varnames[1]
+  unexpose.cov <- data.frame(as.factor(basecov), stringsAsFactors = TRUE); names(unexpose.cov) <- varnames[1]
 
 
   if (length(fixcov) > 0 & length(names(fixcov)) > 0 & length(fixcov) == length(varnames)-1) {

@@ -9,8 +9,8 @@
 
 ## Package information
 
-- Version: 0.2.0
-- Maintainer : Youjin Lee (<ylee160@jhu.edu>)
+- Version: 0.3.0
+- Maintainer : Youjin Lee (<youjin.lee@pennmedicine.upenn.edu>)
 - Imports : stats, nnet
 
 ## Installation

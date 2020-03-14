@@ -71,8 +71,8 @@ printmRR <- function(formula, basecov = 0, fixcov = NULL, data){
   #  return("The length of fixed confounders is incorrect")
   #}
 
-  expose.cov <- data.frame(basecov + 1); names(expose.cov) <- varnames[1]
-  unexpose.cov <- data.frame(basecov); names(unexpose.cov) <- varnames[1]
+  expose.cov <- data.frame(basecov + 1, stringsAsFactors = TRUE); names(expose.cov) <- varnames[1]
+  unexpose.cov <- data.frame(basecov, stringsAsFactors = TRUE); names(unexpose.cov) <- varnames[1]
   if (length(fixcov) > 0 & length(names(fixcov)) > 0 & length(fixcov) == length(varnames)-1) {
     expose.cov <- cbind(expose.cov, fixcov)
     unexpose.cov <- cbind(unexpose.cov, fixcov)
